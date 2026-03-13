@@ -56,12 +56,32 @@ export class ResponseProcessingService
       throw new WorkflowModuleError(validationErrors[0].message, this.id);
     }
 
-    const sttResult = await this.sttAdapter.transcribe({
+    let sttResult = await this.sttAdapter.transcribe({
       audioBuffer: input.audioBuffer,
       language: input.conversationStrategy.agentPersona.language,
       sampleRateHz: 16000,
       encoding: 'wav',
     });
+
+    if (sttResult.transcript.trim().length === 0) {
+      sttResult = await this.sttAdapter.transcribe({
+        audioBuffer: input.audioBuffer,
+        language: input.conversationStrategy.agentPersona.language,
+        sampleRateHz: 16000,
+        encoding: 'wav',
+      });
+    }
+
+    const turnNumber = input.conversationHistory.filter((entry) => entry.speaker === 'customer').length + 1;
+    if (sttResult.transcript.trim().length === 0) {
+      return {
+        customerText: '',
+        agentText: 'I could not hear you clearly. I will connect you to a follow-up workflow.',
+        agentAudioRef: 'text-only://stt-empty',
+        intentLabel: 'stt-empty',
+        turnNumber,
+      };
+    }
 
     const intent = this.intentClassifierService.classify(
       sttResult.transcript,
@@ -85,28 +105,36 @@ export class ResponseProcessingService
       temperature: 0.2,
     });
 
-    const synthesized = await this.ttsAdapter.synthesize({
-      text: llmResult.content,
-      voiceId: input.conversationStrategy.agentPersona.voiceId,
-      language: input.conversationStrategy.agentPersona.language,
-    });
+    let agentAudioRef = 'text-only://response-processing';
+    try {
+      const synthesized = await this.ttsAdapter.synthesize({
+        text: llmResult.content,
+        voiceId: input.conversationStrategy.agentPersona.voiceId,
+        language: input.conversationStrategy.agentPersona.language,
+      });
 
-    const cacheHit = await this.audioCache.get(synthesized.cacheKey);
-    if (!cacheHit) {
-      await this.audioCache.put(synthesized.cacheKey, {
-        buffer: synthesized.audioBuffer,
-        durationSeconds: synthesized.durationSeconds,
-        reference: `audio://${synthesized.cacheKey}`,
+      const cacheHit = await this.audioCache.get(synthesized.cacheKey);
+      if (!cacheHit) {
+        await this.audioCache.put(synthesized.cacheKey, {
+          buffer: synthesized.audioBuffer,
+          durationSeconds: synthesized.durationSeconds,
+          reference: `audio://${synthesized.cacheKey}`,
+        });
+      }
+
+      await this.telephonyAdapter.streamAudio(input.providerCallId, synthesized.audioBuffer);
+      agentAudioRef = `audio://${synthesized.cacheKey}`;
+    } catch (error) {
+      this.logger.warn('Falling back to text-only response delivery', {
+        providerCallId: input.providerCallId,
+        reason: error instanceof Error ? error.message : 'unknown',
       });
     }
 
-    await this.telephonyAdapter.streamAudio(input.providerCallId, synthesized.audioBuffer);
-
-    const turnNumber = input.conversationHistory.filter((entry) => entry.speaker === 'customer').length + 1;
     const output: ResponseProcessingOutput = {
       customerText: sttResult.transcript,
       agentText: llmResult.content,
-      agentAudioRef: `audio://${synthesized.cacheKey}`,
+      agentAudioRef,
       intentLabel: intent.intentLabel,
       detectedObjection: intent.detectedObjection,
       turnNumber,

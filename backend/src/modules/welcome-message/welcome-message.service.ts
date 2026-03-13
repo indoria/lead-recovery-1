@@ -50,25 +50,35 @@ export class WelcomeMessageService implements WorkflowModule<WelcomeMessageInput
       'I noticed your application was paused and I can help you complete it now. ' +
       'Do you have a couple of minutes?';
 
-    const synthesized = await this.ttsAdapter.synthesize({
-      text: welcomeText,
-      voiceId: input.agentPersona.voiceId,
-      language: input.agentPersona.language,
-    });
+    let welcomeAudioRef = 'text-only://welcome-message';
 
-    const cachedAudio = await this.audioCache.get(synthesized.cacheKey);
-    if (!cachedAudio) {
-      await this.audioCache.put(synthesized.cacheKey, {
-        buffer: synthesized.audioBuffer,
-        durationSeconds: synthesized.durationSeconds,
-        reference: `audio://${synthesized.cacheKey}`,
+    try {
+      const synthesized = await this.ttsAdapter.synthesize({
+        text: welcomeText,
+        voiceId: input.agentPersona.voiceId,
+        language: input.agentPersona.language,
+      });
+
+      const cachedAudio = await this.audioCache.get(synthesized.cacheKey);
+      if (!cachedAudio) {
+        await this.audioCache.put(synthesized.cacheKey, {
+          buffer: synthesized.audioBuffer,
+          durationSeconds: synthesized.durationSeconds,
+          reference: `audio://${synthesized.cacheKey}`,
+        });
+      }
+
+      await this.telephonyAdapter.streamAudio(input.providerCallId, synthesized.audioBuffer);
+      welcomeAudioRef = `audio://${synthesized.cacheKey}`;
+    } catch (error) {
+      this.logger.warn('Falling back to text-only welcome message', {
+        providerCallId: input.providerCallId,
+        reason: error instanceof Error ? error.message : 'unknown',
       });
     }
 
-    await this.telephonyAdapter.streamAudio(input.providerCallId, synthesized.audioBuffer);
-
     const output: WelcomeMessageOutput = {
-      welcomeAudioRef: `audio://${synthesized.cacheKey}`,
+      welcomeAudioRef,
       deliveredAt: new Date(),
       welcomeText,
     };

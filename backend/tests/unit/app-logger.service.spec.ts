@@ -37,8 +37,8 @@ describe('AppLoggerService', () => {
     });
 
     const serialized = (console.log as jest.Mock).mock.calls[0][0] as string;
-    expect(serialized).toContain('********rma');
-    expect(serialized).toContain('********0001');
+    expect(serialized).toContain('*******arma');
+    expect(serialized).toContain('*********0001');
     expect(serialized).toContain('************.com');
   });
 

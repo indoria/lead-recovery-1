@@ -90,12 +90,17 @@ export class ConversationLoopService
         break;
       }
 
+      if (output.intentLabel === 'stt-empty') {
+        endReason = 'escalation-triggered';
+        break;
+      }
+
       if (/\b(bye|hang up|later)\b/i.test(output.customerText)) {
         endReason = 'customer-hung-up';
         break;
       }
 
-      if (output.intentLabel === 'consent' || /\b(all set|complete|proceed)\b/i.test(output.agentText)) {
+      if (output.intentLabel === 'consent') {
         mandatoryGoalsAchieved = mandatoryGoals;
         endReason = 'goal-achieved';
         break;
