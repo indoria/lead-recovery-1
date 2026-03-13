@@ -1,0 +1,323 @@
+workflowId: lead-recovery-call
+maxRetries: 2
+retryDelayMs: 250
+steps:
+  - moduleId: customer-data-retrieval
+    order: 1
+    required: true
+    timeoutMs: 5000
+  - moduleId: customer-context-acquisition
+    order: 2
+    required: true
+    timeoutMs: 5000
+  - moduleId: call-preparation
+    order: 3
+    required: true
+    timeoutMs: 10000
+  - moduleId: call-initiation
+    order: 4
+    required: true
+    timeoutMs: 60000
+  - moduleId: welcome-message
+    order: 5
+    required: true
+    timeoutMs: 10000
+  - moduleId: conversation-loop
+    order: 6
+    required: true
+    timeoutMs: 600000
+  - moduleId: exception-handling
+    order: 7
+    required: false
+    timeoutMs: 5000
+    skipConditions:
+      - moduleId: exception-handling
+        expression: '{"==": [{"var": "config.llm.hasBuiltInDeviation"}, true]}'
+  - moduleId: conversation-logging
+    order: 8
+    required: true
+    timeoutMs: 5000
+
+fusionRules:
+  - id: crm-context-fusion
+    moduleIds: [customer-data-retrieval, customer-context-acquisition]
+    adapterType: crm-context-fused
+    fusedAdapterId: crm-context-fused-adapter
+    condition: '{"==": [{"var": "config.crm.supportsContextFusion"}, true]}'
+  - id: telephony-welcome-fusion
+    moduleIds: [call-initiation, welcome-message]
+    adapterType: telephony-welcome
+    fusedAdapterId: telephony-welcome-fused-adapter
+    condition: '{"==": [{"var": "config.telephony.playsWelcomeOnConnect"}, true]}'
+  - id: full-conversational-ai
+    moduleIds: [call-initiation, welcome-message, conversation-loop]
+    adapterType: full-conversational-ai
+    fusedAdapterId: full-conversational-ai-adapter
+    condition: '{"==": [{"var": "config.conversationalAi.useFullService"}, true]}'
+
+inputMappings:
+  - moduleId: customer-data-retrieval
+    inputs:
+      - paramName: leadId
+        sourceType: request
+        path: leadId
+        required: true
+  - moduleId: customer-context-acquisition
+    inputs:
+      - paramName: customerId
+        sourceType: step-output
+        sourceModuleId: customer-data-retrieval
+        sourceKey: customer.id
+        required: true
+      - paramName: funnelId
+        sourceType: step-output
+        sourceModuleId: customer-data-retrieval
+        sourceKey: lead.funnelId
+        required: true
+  - moduleId: call-preparation
+    inputs:
+      - paramName: customer
+        sourceType: step-output
+        sourceModuleId: customer-data-retrieval
+        sourceKey: customer
+        required: true
+      - paramName: lead
+        sourceType: step-output
+        sourceModuleId: customer-data-retrieval
+        sourceKey: lead
+        required: true
+      - paramName: funnelContext
+        sourceType: step-output
+        sourceModuleId: customer-context-acquisition
+        sourceKey: funnelContext
+        required: true
+  - moduleId: call-initiation
+    inputs:
+      - paramName: customer
+        sourceType: step-output
+        sourceModuleId: customer-data-retrieval
+        sourceKey: customer
+        required: true
+      - paramName: lead
+        sourceType: step-output
+        sourceModuleId: customer-data-retrieval
+        sourceKey: lead
+        required: true
+      - paramName: callbackBaseUrl
+        sourceType: request
+        path: callbackBaseUrl
+      - paramName: callbackBaseUrl
+        sourceType: literal
+        value: http://localhost:3000/api
+  - moduleId: welcome-message
+    inputs:
+      - paramName: providerCallId
+        sourceType: step-output
+        sourceModuleId: call-initiation
+        sourceKey: providerCallId
+        required: true
+      - paramName: customer
+        sourceType: step-output
+        sourceModuleId: customer-data-retrieval
+        sourceKey: customer
+        required: true
+      - paramName: funnelContext
+        sourceType: step-output
+        sourceModuleId: customer-context-acquisition
+        sourceKey: funnelContext
+        required: true
+      - paramName: agentPersona
+        sourceType: step-output
+        sourceModuleId: call-preparation
+        sourceKey: conversationStrategy.agentPersona
+        required: true
+  - moduleId: conversation-loop
+    inputs:
+      - paramName: providerCallId
+        sourceType: step-output
+        sourceModuleId: call-initiation
+        sourceKey: providerCallId
+        required: true
+      - paramName: callSessionId
+        sourceType: step-output
+        sourceModuleId: call-initiation
+        sourceKey: callSessionId
+        required: true
+      - paramName: conversationStrategy
+        sourceType: step-output
+        sourceModuleId: call-preparation
+        sourceKey: conversationStrategy
+        required: true
+      - paramName: initialAgentText
+        sourceType: step-output
+        sourceModuleId: welcome-message
+        sourceKey: welcomeText
+        required: true
+      - paramName: initialAgentAudioRef
+        sourceType: step-output
+        sourceModuleId: welcome-message
+        sourceKey: welcomeAudioRef
+      - paramName: initialAgentTimestamp
+        sourceType: step-output
+        sourceModuleId: welcome-message
+        sourceKey: deliveredAt
+      - paramName: scriptedCustomerUtterances
+        sourceType: request
+        path: scriptedCustomerUtterances
+  - moduleId: exception-handling
+    inputs:
+      - paramName: leadId
+        sourceType: step-output
+        sourceModuleId: customer-data-retrieval
+        sourceKey: lead.id
+        required: true
+      - paramName: currentTranscript
+        sourceType: step-output
+        sourceModuleId: conversation-loop
+        sourceKey: finalTranscript
+        required: true
+      - paramName: conversationStrategy
+        sourceType: step-output
+        sourceModuleId: call-preparation
+        sourceKey: conversationStrategy
+        required: true
+      - paramName: intentHistory
+        sourceType: step-output
+        sourceModuleId: conversation-loop
+        sourceKey: intentHistory
+        required: true
+      - paramName: detectedObjections
+        sourceType: step-output
+        sourceModuleId: conversation-loop
+        sourceKey: detectedObjections
+        required: true
+      - paramName: turnsSinceGoalProgress
+        sourceType: step-output
+        sourceModuleId: conversation-loop
+        sourceKey: turnsSinceGoalProgress
+        required: true
+  - moduleId: conversation-logging
+    inputs:
+      - paramName: leadId
+        sourceType: step-output
+        sourceModuleId: customer-data-retrieval
+        sourceKey: lead.id
+        required: true
+      - paramName: customerId
+        sourceType: step-output
+        sourceModuleId: customer-data-retrieval
+        sourceKey: customer.id
+        required: true
+      - paramName: funnelId
+        sourceType: step-output
+        sourceModuleId: customer-data-retrieval
+        sourceKey: lead.funnelId
+        required: true
+      - paramName: stageId
+        sourceType: step-output
+        sourceModuleId: customer-data-retrieval
+        sourceKey: lead.stageId
+        required: true
+      - paramName: callSessionId
+        sourceType: step-output
+        sourceModuleId: call-initiation
+        sourceKey: callSessionId
+        required: true
+      - paramName: providerCallId
+        sourceType: step-output
+        sourceModuleId: call-initiation
+        sourceKey: providerCallId
+        required: true
+      - paramName: transcript
+        sourceType: step-output
+        sourceModuleId: conversation-loop
+        sourceKey: finalTranscript
+        required: true
+      - paramName: assessmentResult
+        sourceType: step-output
+        sourceModuleId: conversation-loop
+        sourceKey: assessment
+      - paramName: detectedObjections
+        sourceType: step-output
+        sourceModuleId: conversation-loop
+        sourceKey: detectedObjections
+        required: true
+      - paramName: endReason
+        sourceType: step-output
+        sourceModuleId: conversation-loop
+        sourceKey: endReason
+        required: true
+      - paramName: exceptionAction
+        sourceType: step-output
+        sourceModuleId: exception-handling
+        sourceKey: action
+      - paramName: moduleOutputs
+        sourceType: context
+        path: stepOutputs
+        required: true
+
+  - moduleId: crm-context-fused-adapter
+    inputs:
+      - paramName: leadId
+        sourceType: request
+        path: leadId
+        required: true
+  - moduleId: telephony-welcome-fused-adapter
+    inputs:
+      - paramName: customer
+        sourceType: step-output
+        sourceModuleId: customer-data-retrieval
+        sourceKey: customer
+        required: true
+      - paramName: lead
+        sourceType: step-output
+        sourceModuleId: customer-data-retrieval
+        sourceKey: lead
+        required: true
+      - paramName: funnelContext
+        sourceType: step-output
+        sourceModuleId: customer-context-acquisition
+        sourceKey: funnelContext
+        required: true
+      - paramName: agentPersona
+        sourceType: step-output
+        sourceModuleId: call-preparation
+        sourceKey: conversationStrategy.agentPersona
+        required: true
+      - paramName: callbackBaseUrl
+        sourceType: request
+        path: callbackBaseUrl
+      - paramName: callbackBaseUrl
+        sourceType: literal
+        value: http://localhost:3000/api
+  - moduleId: full-conversational-ai-adapter
+    inputs:
+      - paramName: customer
+        sourceType: step-output
+        sourceModuleId: customer-data-retrieval
+        sourceKey: customer
+        required: true
+      - paramName: lead
+        sourceType: step-output
+        sourceModuleId: customer-data-retrieval
+        sourceKey: lead
+        required: true
+      - paramName: funnelContext
+        sourceType: step-output
+        sourceModuleId: customer-context-acquisition
+        sourceKey: funnelContext
+        required: true
+      - paramName: conversationStrategy
+        sourceType: step-output
+        sourceModuleId: call-preparation
+        sourceKey: conversationStrategy
+        required: true
+      - paramName: callbackBaseUrl
+        sourceType: request
+        path: callbackBaseUrl
+      - paramName: callbackBaseUrl
+        sourceType: literal
+        value: http://localhost:3000/api
+      - paramName: scriptedCustomerUtterances
+        sourceType: request
+        path: scriptedCustomerUtterances

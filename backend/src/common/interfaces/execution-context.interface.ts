@@ -1,6 +1,6 @@
 import { ResolvedConfig } from '../config/config.schema';
 import { Logger } from '../logger/logger.interface';
-import { ModuleOutput } from './module.types';
+import { ModuleInput, ModuleOutput } from './module.types';
 
 export interface ExecutionContext {
   correlationId: string;
@@ -10,4 +10,6 @@ export interface ExecutionContext {
   config: ResolvedConfig;
   logger: Logger;
   stepOutputs: Map<string, ModuleOutput>;
+  workflowId?: string;
+  workflowInput?: ModuleInput;
 }

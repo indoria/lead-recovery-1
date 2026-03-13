@@ -7,11 +7,24 @@ crm:
   adapter: mock
   baseUrl: ''
   timeout: 5000
+  supportsContextFusion: false
+
+telephony:
+  playsWelcomeOnConnect: false
 
 logging:
   level: info
   format: json
   correlationIdHeader: X-Correlation-ID
+
+llm:
+  hasBuiltInDeviation: false
+
+conversationalAi:
+  useFullService: false
+
+analytics:
+  enabled: true
 
 scheduling:
   maxCallAttempts: 3

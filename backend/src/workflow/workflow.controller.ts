@@ -15,12 +15,8 @@ import { AppLoggerService } from '../common/logger/app-logger.service';
 import { CorrelationIdService } from '../common/logger/correlation-id.service';
 import { TranscriptEntry } from '../common/models/call-session.model';
 import { ModuleRegistry } from '../common/registry/module-registry';
-import { CallInitiationInput, CallInitiationOutput } from '../modules/call-initiation/call-initiation.service';
-import { CallPreparationInput, CallPreparationOutput } from '../modules/call-preparation/call-preparation.service';
-import { ConversationLoopInput, ConversationLoopOutput } from '../modules/conversation-loop/conversation-loop.service';
-import { CustomerContextAcquisitionInput, CustomerContextAcquisitionOutput } from '../modules/customer-context-acquisition/customer-context-acquisition.service';
-import { CustomerDataRetrievalInput, CustomerDataRetrievalOutput } from '../modules/customer-data-retrieval/customer-data-retrieval.service';
-import { WelcomeMessageInput, WelcomeMessageOutput } from '../modules/welcome-message/welcome-message.service';
+import { WorkflowExecutionError, WorkflowPlanError } from '../orchestrator/orchestrator.errors';
+import { WorkflowOrchestrator } from '../orchestrator/workflow-orchestrator';
 
 interface ExecuteModuleRequest {
   moduleId: string;
@@ -50,6 +46,7 @@ export class WorkflowController {
   constructor(
     private readonly moduleRegistry: ModuleRegistry,
     private readonly configService: AppConfigService,
+    private readonly workflowOrchestrator: WorkflowOrchestrator,
     private readonly loggerFactory: AppLoggerService,
     private readonly correlationIdService: CorrelationIdService,
   ) {
@@ -105,85 +102,40 @@ export class WorkflowController {
       },
     });
 
-    const dataRetrieval = this.moduleRegistry.get<
-      WorkflowModule<CustomerDataRetrievalInput, CustomerDataRetrievalOutput>
-    >('customer-data-retrieval');
-    const contextAcquisition = this.moduleRegistry.get<
-      WorkflowModule<CustomerContextAcquisitionInput, CustomerContextAcquisitionOutput>
-    >('customer-context-acquisition');
-    const callPreparation = this.moduleRegistry.get<WorkflowModule<CallPreparationInput, CallPreparationOutput>>(
-      'call-preparation',
-    );
-    const callInitiation = this.moduleRegistry.get<WorkflowModule<CallInitiationInput, CallInitiationOutput>>(
-      'call-initiation',
-    );
-    const welcomeMessage = this.moduleRegistry.get<WorkflowModule<WelcomeMessageInput, WelcomeMessageOutput>>(
-      'welcome-message',
-    );
-    const conversationLoop = this.moduleRegistry.get<WorkflowModule<ConversationLoopInput, ConversationLoopOutput>>(
-      'conversation-loop',
-    );
+    try {
+      const result = await this.workflowOrchestrator.execute(
+        'lead-recovery-call',
+        {
+          leadId: payload.leadId,
+          scriptedCustomerUtterances: payload.scriptedCustomerUtterances,
+          callbackBaseUrl: 'http://localhost:3000/api',
+        },
+        executionContext,
+      );
+      const initiationOutput = result.stepOutputs['call-initiation'];
+      const conversationOutput = result.stepOutputs['conversation-loop'];
 
-    const retrievalOutput = await dataRetrieval.execute({ leadId: payload.leadId }, executionContext);
-    const contextOutput = await contextAcquisition.execute(
-      {
-        customerId: retrievalOutput.customer.id,
-        funnelId: retrievalOutput.lead.funnelId,
-      },
-      executionContext,
-    );
-    const preparationOutput = await callPreparation.execute(
-      {
-        customer: retrievalOutput.customer,
-        lead: retrievalOutput.lead,
-        funnelContext: contextOutput.funnelContext,
-      },
-      executionContext,
-    );
-    const initiationOutput = await callInitiation.execute(
-      {
-        customer: retrievalOutput.customer,
-        lead: retrievalOutput.lead,
-        callbackBaseUrl: 'http://localhost:3000/api',
-      },
-      executionContext,
-    );
-    const welcomeOutput = await welcomeMessage.execute(
-      {
-        providerCallId: initiationOutput.providerCallId,
-        customer: retrievalOutput.customer,
-        funnelContext: contextOutput.funnelContext,
-        agentPersona: preparationOutput.conversationStrategy.agentPersona,
-      },
-      executionContext,
-    );
-    const conversationOutput = await conversationLoop.execute(
-      {
-        providerCallId: initiationOutput.providerCallId,
-        callSessionId: initiationOutput.callSessionId,
-        conversationStrategy: preparationOutput.conversationStrategy,
-        initialTranscript: [
-          {
-            timestamp: welcomeOutput.deliveredAt,
-            speaker: 'agent',
-            text: welcomeOutput.welcomeText,
-            audioRef: welcomeOutput.welcomeAudioRef,
-          },
-        ],
-        scriptedCustomerUtterances: payload.scriptedCustomerUtterances,
-      },
-      executionContext,
-    );
+      if (!isRecord(initiationOutput) || !isRecord(conversationOutput)) {
+        throw new BadRequestException('Workflow execution did not produce the expected outputs');
+      }
 
-    return {
-      leadId: payload.leadId,
-      callSessionId: initiationOutput.callSessionId,
-      providerCallId: initiationOutput.providerCallId,
-      endReason: conversationOutput.endReason,
-      turnCount: conversationOutput.turnCount,
-      finalTranscript: conversationOutput.finalTranscript,
-      assessment: conversationOutput.assessment,
-    };
+      return {
+        leadId: payload.leadId,
+        callSessionId: String(initiationOutput.callSessionId),
+        providerCallId: String(initiationOutput.providerCallId),
+        endReason: String(conversationOutput.endReason),
+        turnCount: Number(conversationOutput.turnCount),
+        finalTranscript: Array.isArray(conversationOutput.finalTranscript)
+          ? (conversationOutput.finalTranscript as TranscriptEntry[])
+          : [],
+        assessment: conversationOutput.assessment,
+      };
+    } catch (error) {
+      if (error instanceof WorkflowPlanError || error instanceof WorkflowExecutionError) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
   }
 
   private validateRequest(requestBody: unknown): ExecuteModuleRequest {

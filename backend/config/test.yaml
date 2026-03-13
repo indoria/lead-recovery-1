@@ -7,3 +7,6 @@ logging:
 
 crm:
   timeout: 100
+
+analytics:
+  enabled: true

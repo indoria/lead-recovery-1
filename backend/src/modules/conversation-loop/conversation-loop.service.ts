@@ -14,7 +14,10 @@ export interface ConversationLoopInput extends ModuleInput {
   providerCallId: string;
   callSessionId: string;
   conversationStrategy: ConversationStrategy;
-  initialTranscript: TranscriptEntry[];
+  initialTranscript?: TranscriptEntry[];
+  initialAgentText?: string;
+  initialAgentAudioRef?: string;
+  initialAgentTimestamp?: Date;
   scriptedCustomerUtterances?: string[];
 }
 
@@ -24,6 +27,8 @@ export interface ConversationLoopOutput extends ModuleOutput {
   turnCount: number;
   detectedObjections: Objection[];
   assessment: AssessmentResult;
+  intentHistory: string[];
+  turnsSinceGoalProgress: number;
 }
 
 @Injectable()
@@ -47,8 +52,9 @@ export class ConversationLoopService
       throw new WorkflowModuleError(validationErrors[0].message, this.id);
     }
 
-    const transcript = [...input.initialTranscript];
+    const transcript = this.buildInitialTranscript(input);
     const detectedObjections: Objection[] = [];
+    const intentHistory: string[] = [];
     const utterances = input.scriptedCustomerUtterances ?? [
       'I did not receive otp',
       'yes, please continue',
@@ -57,6 +63,7 @@ export class ConversationLoopService
     let endReason: ConversationEndReason = 'max-turns-reached';
     let turnCount = 0;
     let mandatoryGoalsAchieved = 0;
+    let turnsSinceGoalProgress = 0;
     const mandatoryGoals = input.conversationStrategy.goals.filter((goal) => goal.isMandatory).length;
 
     for (const utterance of utterances) {
@@ -80,6 +87,8 @@ export class ConversationLoopService
       transcript.push({ timestamp: new Date(), speaker: 'agent', text: output.agentText, audioRef: output.agentAudioRef });
 
       turnCount += 1;
+      intentHistory.push(output.intentLabel);
+      turnsSinceGoalProgress += 1;
 
       if (output.detectedObjection) {
         detectedObjections.push(output.detectedObjection);
@@ -102,6 +111,7 @@ export class ConversationLoopService
 
       if (output.intentLabel === 'consent') {
         mandatoryGoalsAchieved = mandatoryGoals;
+        turnsSinceGoalProgress = 0;
         endReason = 'goal-achieved';
         break;
       }
@@ -129,6 +139,8 @@ export class ConversationLoopService
       turnCount,
       detectedObjections,
       assessment,
+      intentHistory,
+      turnsSinceGoalProgress,
     };
   }
 
@@ -143,8 +155,8 @@ export class ConversationLoopService
     if (!input.conversationStrategy || typeof input.conversationStrategy.maxTurns !== 'number') {
       errors.push({ field: 'conversationStrategy', message: 'conversationStrategy is required' });
     }
-    if (!Array.isArray(input.initialTranscript)) {
-      errors.push({ field: 'initialTranscript', message: 'initialTranscript must be an array' });
+    if (!Array.isArray(input.initialTranscript) && typeof input.initialAgentText !== 'string') {
+      errors.push({ field: 'initialTranscript', message: 'initialTranscript or initialAgentText is required' });
     }
     return errors;
   }
@@ -159,5 +171,20 @@ export class ConversationLoopService
 
   canSkip(_context: ExecutionContext): boolean {
     return false;
+  }
+
+  private buildInitialTranscript(input: ConversationLoopInput): TranscriptEntry[] {
+    if (Array.isArray(input.initialTranscript)) {
+      return [...input.initialTranscript];
+    }
+
+    return [
+      {
+        timestamp: input.initialAgentTimestamp ?? new Date(),
+        speaker: 'agent',
+        text: input.initialAgentText ?? '',
+        audioRef: input.initialAgentAudioRef,
+      },
+    ];
   }
 }

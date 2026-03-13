@@ -12,11 +12,24 @@ export const testConfig: ResolvedConfig = {
     adapter: 'mock',
     baseUrl: '',
     timeout: 100,
+    supportsContextFusion: false,
+  },
+  telephony: {
+    playsWelcomeOnConnect: false,
   },
   logging: {
     level: 'debug',
     format: 'json',
     correlationIdHeader: 'X-Correlation-ID',
+  },
+  llm: {
+    hasBuiltInDeviation: false,
+  },
+  conversationalAi: {
+    useFullService: false,
+  },
+  analytics: {
+    enabled: true,
   },
   scheduling: {
     maxCallAttempts: 3,
