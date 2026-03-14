@@ -9,11 +9,46 @@ export interface ResolvedConfig {
   crm: {
     adapter: 'mock' | 'internal' | 'salesforce' | 'hubspot';
     baseUrl: string;
+    apiKeyEnvVar: string;
     timeout: number;
     supportsContextFusion: boolean;
   };
+  stt: {
+    provider: 'mock' | 'sarvam';
+    sarvam: {
+      baseUrl: string;
+      apiKeyEnvVar: string;
+      timeoutMs: number;
+      retry429Ms: number;
+      fallbackToMockOn5xx: boolean;
+    };
+  };
+  tts: {
+    provider: 'mock' | 'elevenlabs';
+    elevenLabs: {
+      baseUrl: string;
+      apiKeyEnvVar: string;
+      timeoutMs: number;
+      cacheTtlDays: number;
+      defaultVoiceId: string;
+    };
+  };
   telephony: {
+    provider: 'mock' | 'twilio' | 'exotel';
     playsWelcomeOnConnect: boolean;
+    fromNumber: string;
+    twilio: {
+      accountSidEnvVar: string;
+      authTokenEnvVar: string;
+      baseUrl: string;
+      timeoutMs: number;
+    };
+    exotel: {
+      accountSidEnvVar: string;
+      authTokenEnvVar: string;
+      subdomain: string;
+      timeoutMs: number;
+    };
   };
   logging: {
     level: 'debug' | 'info' | 'warn' | 'error' | 'fatal';
@@ -21,7 +56,18 @@ export interface ResolvedConfig {
     correlationIdHeader: string;
   };
   llm: {
+    provider: 'mock' | 'gemini';
     hasBuiltInDeviation: boolean;
+    maxPromptTokens: number;
+    gemini: {
+      baseUrl: string;
+      model: string;
+      apiKeyEnvVar: string;
+      timeoutMs: number;
+    };
+  };
+  outreach: {
+    preferredChannel: 'call' | 'sms' | 'email' | 'whatsapp';
   };
   conversationalAi: {
     useFullService: boolean;
@@ -42,7 +88,20 @@ export interface ResolvedConfig {
 const schema: JSONSchemaType<ResolvedConfig> = {
   type: 'object',
   additionalProperties: false,
-  required: ['app', 'crm', 'telephony', 'logging', 'llm', 'conversationalAi', 'analytics', 'scheduling', 'security'],
+  required: [
+    'app',
+    'crm',
+    'stt',
+    'tts',
+    'telephony',
+    'logging',
+    'llm',
+    'outreach',
+    'conversationalAi',
+    'analytics',
+    'scheduling',
+    'security',
+  ],
   properties: {
     app: {
       type: 'object',
@@ -57,20 +116,85 @@ const schema: JSONSchemaType<ResolvedConfig> = {
     crm: {
       type: 'object',
       additionalProperties: false,
-      required: ['adapter', 'baseUrl', 'timeout', 'supportsContextFusion'],
+      required: ['adapter', 'baseUrl', 'apiKeyEnvVar', 'timeout', 'supportsContextFusion'],
       properties: {
         adapter: { type: 'string', enum: ['mock', 'internal', 'salesforce', 'hubspot'] },
         baseUrl: { type: 'string' },
+        apiKeyEnvVar: { type: 'string' },
         timeout: { type: 'integer' },
         supportsContextFusion: { type: 'boolean' },
+      },
+    },
+    stt: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['provider', 'sarvam'],
+      properties: {
+        provider: { type: 'string', enum: ['mock', 'sarvam'] },
+        sarvam: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['baseUrl', 'apiKeyEnvVar', 'timeoutMs', 'retry429Ms', 'fallbackToMockOn5xx'],
+          properties: {
+            baseUrl: { type: 'string' },
+            apiKeyEnvVar: { type: 'string' },
+            timeoutMs: { type: 'integer' },
+            retry429Ms: { type: 'integer' },
+            fallbackToMockOn5xx: { type: 'boolean' },
+          },
+        },
+      },
+    },
+    tts: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['provider', 'elevenLabs'],
+      properties: {
+        provider: { type: 'string', enum: ['mock', 'elevenlabs'] },
+        elevenLabs: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['baseUrl', 'apiKeyEnvVar', 'timeoutMs', 'cacheTtlDays', 'defaultVoiceId'],
+          properties: {
+            baseUrl: { type: 'string' },
+            apiKeyEnvVar: { type: 'string' },
+            timeoutMs: { type: 'integer' },
+            cacheTtlDays: { type: 'integer' },
+            defaultVoiceId: { type: 'string' },
+          },
+        },
       },
     },
     telephony: {
       type: 'object',
       additionalProperties: false,
-      required: ['playsWelcomeOnConnect'],
+      required: ['provider', 'playsWelcomeOnConnect', 'fromNumber', 'twilio', 'exotel'],
       properties: {
+        provider: { type: 'string', enum: ['mock', 'twilio', 'exotel'] },
         playsWelcomeOnConnect: { type: 'boolean' },
+        fromNumber: { type: 'string' },
+        twilio: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['accountSidEnvVar', 'authTokenEnvVar', 'baseUrl', 'timeoutMs'],
+          properties: {
+            accountSidEnvVar: { type: 'string' },
+            authTokenEnvVar: { type: 'string' },
+            baseUrl: { type: 'string' },
+            timeoutMs: { type: 'integer' },
+          },
+        },
+        exotel: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['accountSidEnvVar', 'authTokenEnvVar', 'subdomain', 'timeoutMs'],
+          properties: {
+            accountSidEnvVar: { type: 'string' },
+            authTokenEnvVar: { type: 'string' },
+            subdomain: { type: 'string' },
+            timeoutMs: { type: 'integer' },
+          },
+        },
       },
     },
     logging: {
@@ -86,9 +210,30 @@ const schema: JSONSchemaType<ResolvedConfig> = {
     llm: {
       type: 'object',
       additionalProperties: false,
-      required: ['hasBuiltInDeviation'],
+      required: ['provider', 'hasBuiltInDeviation', 'maxPromptTokens', 'gemini'],
       properties: {
+        provider: { type: 'string', enum: ['mock', 'gemini'] },
         hasBuiltInDeviation: { type: 'boolean' },
+        maxPromptTokens: { type: 'integer' },
+        gemini: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['baseUrl', 'model', 'apiKeyEnvVar', 'timeoutMs'],
+          properties: {
+            baseUrl: { type: 'string' },
+            model: { type: 'string' },
+            apiKeyEnvVar: { type: 'string' },
+            timeoutMs: { type: 'integer' },
+          },
+        },
+      },
+    },
+    outreach: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['preferredChannel'],
+      properties: {
+        preferredChannel: { type: 'string', enum: ['call', 'sms', 'email', 'whatsapp'] },
       },
     },
     conversationalAi: {

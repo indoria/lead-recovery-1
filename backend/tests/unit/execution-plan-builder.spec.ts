@@ -97,6 +97,7 @@ describe('ExecutionPlanBuilder', () => {
         config: {
           ...testConfig,
           telephony: {
+            ...testConfig.telephony,
             playsWelcomeOnConnect: true,
           },
         },
@@ -120,6 +121,7 @@ describe('ExecutionPlanBuilder', () => {
         config: {
           ...testConfig,
           llm: {
+            ...testConfig.llm,
             hasBuiltInDeviation: true,
           },
         },

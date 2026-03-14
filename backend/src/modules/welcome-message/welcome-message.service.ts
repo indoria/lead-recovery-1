@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { LocalAudioCache } from '../../adapters/audio-cache/local-audio-cache';
-import { MockTelephonyAdapter } from '../../adapters/telephony/mock-telephony-adapter';
-import { MockTTSAdapter } from '../../adapters/tts/mock-tts-adapter';
+import { TELEPHONY_ADAPTER, TTS_ADAPTER } from '../../adapters/integration.tokens';
+import { TelephonyAdapter } from '../../adapters/telephony/telephony-adapter.interface';
+import { TTSAdapter } from '../../adapters/tts/tts-adapter.interface';
 import { WorkflowModuleError } from '../../common/errors/workflow-module.error';
 import { ExecutionContext } from '../../common/interfaces/execution-context.interface';
 import { ModuleInput, ModuleOutput, ValidationError } from '../../common/interfaces/module.types';
@@ -30,8 +31,10 @@ export class WelcomeMessageService implements WorkflowModule<WelcomeMessageInput
   private readonly logger: ReturnType<AppLoggerService['createLogger']>;
 
   constructor(
-    private readonly ttsAdapter: MockTTSAdapter,
-    private readonly telephonyAdapter: MockTelephonyAdapter,
+    @Inject(TTS_ADAPTER)
+    private readonly ttsAdapter: TTSAdapter,
+    @Inject(TELEPHONY_ADAPTER)
+    private readonly telephonyAdapter: TelephonyAdapter,
     private readonly audioCache: LocalAudioCache,
     private readonly loggerFactory: AppLoggerService,
   ) {

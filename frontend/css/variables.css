@@ -54,17 +54,17 @@ a {
 }
 
 :root[data-theme='light'] {
-  --titlebar-bg: #dddddd;
+  --titlebar-bg: #ffffff;
   --titlebar-fg: #333333;
   --activitybar-bg: #ffffff99;
   --activitybar-fg: #2c2c2c;
   --activitybar-active-border: #005fb8;
-  --sidebar-bg: #f3f3f3;
+  --sidebar-bg: rgb(246, 248, 250);
   --sidebar-border: #e5e5e5;
   --editor-bg: #ffffff;
   --editor-fg: #333333;
   --editor-muted: #616161;
-  --panel-bg: #f8f8f8;
+  --panel-bg: rgb(246, 248, 250);
   --panel-border: #e5e5e5;
   --input-bg: #ffffff;
   --input-fg: #333333;

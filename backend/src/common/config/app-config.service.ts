@@ -54,6 +54,36 @@ export class AppConfigService {
       overrides.security = { ...(overrides.security as PlainObject | undefined), jwtSecret: process.env.JWT_SECRET };
     }
 
+    if (process.env.CRM_ADAPTER !== undefined) {
+      overrides.crm = { ...(overrides.crm as PlainObject | undefined), adapter: process.env.CRM_ADAPTER };
+    }
+
+    if (process.env.STT_PROVIDER !== undefined) {
+      overrides.stt = { ...(overrides.stt as PlainObject | undefined), provider: process.env.STT_PROVIDER };
+    }
+
+    if (process.env.TTS_PROVIDER !== undefined) {
+      overrides.tts = { ...(overrides.tts as PlainObject | undefined), provider: process.env.TTS_PROVIDER };
+    }
+
+    if (process.env.TELEPHONY_PROVIDER !== undefined) {
+      overrides.telephony = {
+        ...(overrides.telephony as PlainObject | undefined),
+        provider: process.env.TELEPHONY_PROVIDER,
+      };
+    }
+
+    if (process.env.LLM_PROVIDER !== undefined) {
+      overrides.llm = { ...(overrides.llm as PlainObject | undefined), provider: process.env.LLM_PROVIDER };
+    }
+
+    if (process.env.LLM_MAX_PROMPT_TOKENS !== undefined) {
+      overrides.llm = {
+        ...(overrides.llm as PlainObject | undefined),
+        maxPromptTokens: Number(process.env.LLM_MAX_PROMPT_TOKENS),
+      };
+    }
+
     return overrides;
   }
 

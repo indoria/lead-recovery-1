@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { MockTelephonyAdapter } from '../../adapters/telephony/mock-telephony-adapter';
+import { TELEPHONY_ADAPTER } from '../../adapters/integration.tokens';
+import { TelephonyAdapter } from '../../adapters/telephony/telephony-adapter.interface';
+import { AppConfigService } from '../../common/config/app-config.service';
 import { WorkflowModuleError } from '../../common/errors/workflow-module.error';
 import { ExecutionContext } from '../../common/interfaces/execution-context.interface';
 import { ModuleInput, ModuleOutput, ValidationError } from '../../common/interfaces/module.types';
@@ -27,8 +29,10 @@ export class CallInitiationService implements WorkflowModule<CallInitiationInput
   private readonly logger: ReturnType<AppLoggerService['createLogger']>;
 
   constructor(
-    private readonly telephonyAdapter: MockTelephonyAdapter,
+    @Inject(TELEPHONY_ADAPTER)
+    private readonly telephonyAdapter: TelephonyAdapter,
     private readonly loggerFactory: AppLoggerService,
+    private readonly configService: AppConfigService,
   ) {
     this.logger = this.loggerFactory.createLogger(this.id);
   }
@@ -40,7 +44,7 @@ export class CallInitiationService implements WorkflowModule<CallInitiationInput
     }
 
     const call = await this.telephonyAdapter.initiateCall({
-      fromNumber: '+910000000000',
+      fromNumber: this.configService.getConfig().telephony.fromNumber,
       toNumber: input.customer.phone,
       callbackUrl: `${input.callbackBaseUrl}/telephony/events`,
       metadata: {

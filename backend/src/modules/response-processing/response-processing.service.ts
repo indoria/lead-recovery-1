@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { LocalAudioCache } from '../../adapters/audio-cache/local-audio-cache';
-import { LLMMessage } from '../../adapters/llm/llm-adapter.interface';
-import { MockLLMAdapter } from '../../adapters/llm/mock-llm-adapter';
-import { MockSTTAdapter } from '../../adapters/stt/mock-stt-adapter';
-import { MockTelephonyAdapter } from '../../adapters/telephony/mock-telephony-adapter';
-import { MockTTSAdapter } from '../../adapters/tts/mock-tts-adapter';
+import { LLMAdapter, LLMMessage } from '../../adapters/llm/llm-adapter.interface';
+import { LLM_ADAPTER, STT_ADAPTER, TELEPHONY_ADAPTER, TTS_ADAPTER } from '../../adapters/integration.tokens';
+import { STTAdapter } from '../../adapters/stt/stt-adapter.interface';
+import { TelephonyAdapter } from '../../adapters/telephony/telephony-adapter.interface';
+import { TTSAdapter } from '../../adapters/tts/tts-adapter.interface';
 import { WorkflowModuleError } from '../../common/errors/workflow-module.error';
 import { ExecutionContext } from '../../common/interfaces/execution-context.interface';
 import { ModuleInput, ModuleOutput, ValidationError } from '../../common/interfaces/module.types';
@@ -39,10 +39,14 @@ export class ResponseProcessingService
   private readonly logger: ReturnType<AppLoggerService['createLogger']>;
 
   constructor(
-    private readonly sttAdapter: MockSTTAdapter,
-    private readonly llmAdapter: MockLLMAdapter,
-    private readonly ttsAdapter: MockTTSAdapter,
-    private readonly telephonyAdapter: MockTelephonyAdapter,
+    @Inject(STT_ADAPTER)
+    private readonly sttAdapter: STTAdapter,
+    @Inject(LLM_ADAPTER)
+    private readonly llmAdapter: LLMAdapter,
+    @Inject(TTS_ADAPTER)
+    private readonly ttsAdapter: TTSAdapter,
+    @Inject(TELEPHONY_ADAPTER)
+    private readonly telephonyAdapter: TelephonyAdapter,
     private readonly audioCache: LocalAudioCache,
     private readonly intentClassifierService: IntentClassifierService,
     private readonly loggerFactory: AppLoggerService,

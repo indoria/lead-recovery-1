@@ -8,5 +8,17 @@ logging:
 crm:
   timeout: 100
 
+stt:
+  provider: mock
+
+tts:
+  provider: mock
+
+telephony:
+  provider: mock
+
+llm:
+  provider: mock
+
 analytics:
   enabled: true

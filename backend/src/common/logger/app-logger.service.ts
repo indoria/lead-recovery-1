@@ -63,7 +63,20 @@ export class AppLoggerService {
     if (typeof value === 'object' && value !== null) {
       return Object.fromEntries(
         Object.entries(value).map(([key, nestedValue]) => {
-          if (['phone', 'email', 'name', 'jwtSecret', 'encryptionKey'].includes(key)) {
+          if (
+            [
+              'phone',
+              'email',
+              'name',
+              'jwtSecret',
+              'encryptionKey',
+              'apiKey',
+              'authToken',
+              'accountSid',
+              'token',
+              'authorization',
+            ].includes(key)
+          ) {
             return [key, this.maskValue(String(nestedValue))];
           }
           return [key, this.maskSensitiveFields(nestedValue)];

@@ -11,11 +11,46 @@ export const testConfig: ResolvedConfig = {
   crm: {
     adapter: 'mock',
     baseUrl: '',
+    apiKeyEnvVar: 'CRM_API_KEY',
     timeout: 100,
     supportsContextFusion: false,
   },
+  stt: {
+    provider: 'mock',
+    sarvam: {
+      baseUrl: 'https://api.sarvam.ai',
+      apiKeyEnvVar: 'SARVAM_API_KEY',
+      timeoutMs: 5000,
+      retry429Ms: 1200,
+      fallbackToMockOn5xx: true,
+    },
+  },
+  tts: {
+    provider: 'mock',
+    elevenLabs: {
+      baseUrl: 'https://api.elevenlabs.io',
+      apiKeyEnvVar: 'ELEVEN_LABS_API_KEY',
+      timeoutMs: 5000,
+      cacheTtlDays: 7,
+      defaultVoiceId: 'default',
+    },
+  },
   telephony: {
+    provider: 'mock',
     playsWelcomeOnConnect: false,
+    fromNumber: '+910000000000',
+    twilio: {
+      accountSidEnvVar: 'TWILIO_ACCOUNT_SID',
+      authTokenEnvVar: 'TWILIO_AUTH_TOKEN',
+      baseUrl: 'https://api.twilio.com',
+      timeoutMs: 5000,
+    },
+    exotel: {
+      accountSidEnvVar: 'EXOTEL_ACCOUNT_SID',
+      authTokenEnvVar: 'EXOTEL_AUTH_TOKEN',
+      subdomain: 'api.exotel.com',
+      timeoutMs: 5000,
+    },
   },
   logging: {
     level: 'debug',
@@ -23,7 +58,18 @@ export const testConfig: ResolvedConfig = {
     correlationIdHeader: 'X-Correlation-ID',
   },
   llm: {
+    provider: 'mock',
     hasBuiltInDeviation: false,
+    maxPromptTokens: 4000,
+    gemini: {
+      baseUrl: 'https://generativelanguage.googleapis.com',
+      model: 'gemini-1.5-flash',
+      apiKeyEnvVar: 'GEMINI_API_KEY',
+      timeoutMs: 7000,
+    },
+  },
+  outreach: {
+    preferredChannel: 'call',
   },
   conversationalAi: {
     useFullService: false,
