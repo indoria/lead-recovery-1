@@ -16,6 +16,12 @@
 
 .activity-bar {
   grid-area: activity;
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-bar_top {
+  flex: 1;
 }
 
 .side-panel {

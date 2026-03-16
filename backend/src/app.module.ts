@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AgentsModule } from './agents/agents.module';
 import { IntegrationAdaptersModule } from './adapters/integration-adapters.module';
 import { AppConfigModule } from './common/config/app-config.module';
 import { LoggerModule } from './common/logger/logger.module';
@@ -26,6 +27,7 @@ import { WorkflowModule } from './workflow/workflow.module';
   imports: [
     AppConfigModule,
     LoggerModule,
+    AgentsModule,
     FunnelsModule,
     CRMAdapterModule,
     IntegrationAdaptersModule,

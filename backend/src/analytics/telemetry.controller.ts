@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Post } from '@nestjs/common';
 import { EventBus } from './event-bus';
 
 interface TelemetryPayload {
@@ -9,6 +9,14 @@ interface TelemetryPayload {
 @Controller('telemetry')
 export class TelemetryController {
   constructor(private readonly eventBus: EventBus) {}
+
+  @Get()
+  info() {
+    return {
+      ok: true,
+      message: 'Telemetry endpoint is available. Use POST to submit telemetry payloads.',
+    };
+  }
 
   @Post()
   ingest(@Body() payload: unknown) {
