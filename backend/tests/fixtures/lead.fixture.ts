@@ -1,4 +1,4 @@
-import { mockLeads } from 'src/adapters/crm/mock-crm.data';
+import { leadsFixture } from '../unit/crm-test-fixtures';
 
-export const scheduledLeadFixture = structuredClone(mockLeads[0]);
-export const pendingLeadFixture = structuredClone(mockLeads[1]);
+export const scheduledLeadFixture = structuredClone(leadsFixture[0]);
+export const pendingLeadFixture = structuredClone(leadsFixture[1]);

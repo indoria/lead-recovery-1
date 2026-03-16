@@ -1,0 +1,20 @@
+[
+  {
+    "id": "cust_001",
+    "name": "Riya Sharma",
+    "phone": "+919900000001",
+    "email": "riya.sharma@example.com",
+    "language": "en-IN",
+    "createdAt": "2026-03-10T10:00:00.000Z",
+    "updatedAt": "2026-03-10T10:00:00.000Z"
+  },
+  {
+    "id": "cust_002",
+    "name": "Arjun Verma",
+    "phone": "+919900000002",
+    "email": "arjun.verma@example.com",
+    "language": "hi-IN",
+    "createdAt": "2026-03-10T10:00:00.000Z",
+    "updatedAt": "2026-03-10T10:00:00.000Z"
+  }
+]

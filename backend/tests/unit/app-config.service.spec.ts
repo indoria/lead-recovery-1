@@ -21,6 +21,8 @@ describe('AppConfigService', () => {
     delete process.env.JWT_SECRET;
     delete process.env.LLM_MAX_PROMPT_TOKENS;
     delete process.env.STT_PROVIDER;
+    delete process.env.CRM_BASE_URL;
+    delete process.env.CRM_TIMEOUT;
     delete process.env.NODE_ENV;
   });
 
@@ -35,7 +37,7 @@ describe('AppConfigService', () => {
     const service = new AppConfigService();
 
     expect(service.getConfig().app.port).toBe(3000);
-    expect(service.getConfig().crm.adapter).toBe('mock');
+    expect(service.getConfig().crm.adapter).toBe('file');
   });
 
   it('merges environment and process env overrides', () => {
@@ -55,6 +57,8 @@ describe('AppConfigService', () => {
     process.env.JWT_SECRET = 'secret-token';
     process.env.LLM_MAX_PROMPT_TOKENS = '3000';
     process.env.STT_PROVIDER = 'sarvam';
+    process.env.CRM_BASE_URL = 'https://crm.example.internal';
+    process.env.CRM_TIMEOUT = '9000';
 
     const service = new AppConfigService();
 
@@ -63,6 +67,8 @@ describe('AppConfigService', () => {
     expect(service.getConfig().security.jwtSecret).toBe('secret-token');
     expect(service.getConfig().llm.maxPromptTokens).toBe(3000);
     expect(service.getConfig().stt.provider).toBe('sarvam');
+    expect(service.getConfig().crm.baseUrl).toBe('https://crm.example.internal');
+    expect(service.getConfig().crm.timeout).toBe(9000);
   });
 
   it('throws when config is invalid', () => {

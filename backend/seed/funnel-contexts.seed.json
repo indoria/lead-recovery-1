@@ -1,0 +1,56 @@
+[
+  {
+    "customerId": "cust_001",
+    "funnelId": "funnel_bob_credit_card",
+    "currentStageId": "stage_mobile_verification",
+    "completedStageIds": [],
+    "progressionHistory": [
+      {
+        "stageId": "stage_mobile_verification",
+        "enteredAt": "2026-03-10T10:00:00.000Z",
+        "outcome": "dropped",
+        "notes": "Customer abandoned OTP verification."
+      }
+    ],
+    "anticipatedObjections": [
+      {
+        "id": "obj_mobile_001",
+        "type": "customer",
+        "title": "Did not receive OTP",
+        "description": "Customer did not receive or could not access the OTP.",
+        "handlingScript": "Guide the customer to request a fresh OTP.",
+        "escalate": false
+      }
+    ]
+  },
+  {
+    "customerId": "cust_002",
+    "funnelId": "funnel_bob_credit_card",
+    "currentStageId": "stage_personal_details",
+    "completedStageIds": ["stage_mobile_verification"],
+    "progressionHistory": [
+      {
+        "stageId": "stage_mobile_verification",
+        "enteredAt": "2026-03-10T10:00:00.000Z",
+        "exitedAt": "2026-03-10T10:00:00.000Z",
+        "outcome": "completed"
+      },
+      {
+        "stageId": "stage_personal_details",
+        "enteredAt": "2026-03-10T10:00:00.000Z",
+        "outcome": "dropped",
+        "notes": "Customer abandoned during form entry."
+      }
+    ],
+    "anticipatedObjections": [
+      {
+        "id": "obj_personal_001",
+        "type": "system",
+        "title": "PAN detail mismatch",
+        "description": "System validation failed because PAN data does not match the entered details.",
+        "handlingScript": "Help the customer verify PAN inputs and retry.",
+        "escalate": true
+      }
+    ]
+  }
+]

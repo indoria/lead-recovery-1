@@ -4,7 +4,7 @@ app:
   port: 3000
 
 crm:
-  adapter: mock
+  adapter: file
   baseUrl: ''
   apiKeyEnvVar: CRM_API_KEY
   timeout: 5000

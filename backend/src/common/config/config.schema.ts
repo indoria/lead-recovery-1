@@ -7,7 +7,7 @@ export interface ResolvedConfig {
     port: number;
   };
   crm: {
-    adapter: 'mock' | 'internal' | 'salesforce' | 'hubspot';
+    adapter: 'mock' | 'file' | 'internal' | 'salesforce' | 'hubspot';
     baseUrl: string;
     apiKeyEnvVar: string;
     timeout: number;
@@ -118,7 +118,7 @@ const schema: JSONSchemaType<ResolvedConfig> = {
       additionalProperties: false,
       required: ['adapter', 'baseUrl', 'apiKeyEnvVar', 'timeout', 'supportsContextFusion'],
       properties: {
-        adapter: { type: 'string', enum: ['mock', 'internal', 'salesforce', 'hubspot'] },
+        adapter: { type: 'string', enum: ['mock', 'file', 'internal', 'salesforce', 'hubspot'] },
         baseUrl: { type: 'string' },
         apiKeyEnvVar: { type: 'string' },
         timeout: { type: 'integer' },

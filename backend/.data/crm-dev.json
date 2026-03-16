@@ -1,0 +1,164 @@
+{
+  "customers": [
+    {
+      "id": "cust_001",
+      "name": "Riya Sharma",
+      "phone": "+919900000001",
+      "email": "riya.sharma@example.com",
+      "language": "en-IN",
+      "createdAt": "2026-03-10T10:00:00.000Z",
+      "updatedAt": "2026-03-10T10:00:00.000Z"
+    },
+    {
+      "id": "cust_002",
+      "name": "Arjun Verma",
+      "phone": "+919900000002",
+      "email": "arjun.verma@example.com",
+      "language": "hi-IN",
+      "createdAt": "2026-03-10T10:00:00.000Z",
+      "updatedAt": "2026-03-10T10:00:00.000Z"
+    }
+  ],
+  "leads": [
+    {
+      "id": "lead_001",
+      "customerId": "cust_001",
+      "funnelId": "funnel_bob_credit_card",
+      "stageId": "stage_mobile_verification",
+      "status": "scheduled",
+      "callAttempts": 0,
+      "dropOffReason": "OTP not completed",
+      "metadata": {},
+      "scheduledCallAt": "2026-03-10T10:00:00.000Z"
+    },
+    {
+      "id": "lead_002",
+      "customerId": "cust_002",
+      "funnelId": "funnel_bob_credit_card",
+      "stageId": "stage_personal_details",
+      "status": "pending",
+      "callAttempts": 1,
+      "metadata": {}
+    }
+  ],
+  "funnels": [
+    {
+      "id": "funnel_bob_credit_card",
+      "productId": "product_bob_credit_card",
+      "title": "Bank of Baroda Credit Card Funnel",
+      "description": "Lead recovery workflow for the Bank of Baroda credit card journey.",
+      "isActive": true,
+      "policies": [
+        {
+          "id": "policy_001",
+          "scope": "funnel",
+          "key": "call-window",
+          "value": "09:00-18:00",
+          "description": "Calls are allowed during business hours only."
+        }
+      ],
+      "stages": [
+        {
+          "id": "stage_mobile_verification",
+          "funnelId": "funnel_bob_credit_card",
+          "title": "Mobile Verification",
+          "goal": "Verify the customer mobile number and OTP.",
+          "description": "Customer should complete OTP verification.",
+          "order": 1,
+          "isParallel": false,
+          "policies": [],
+          "systemObjections": [],
+          "customerObjections": [
+            {
+              "id": "obj_mobile_001",
+              "type": "customer",
+              "title": "Did not receive OTP",
+              "description": "Customer did not receive or could not access the OTP.",
+              "handlingScript": "Guide the customer to request a fresh OTP.",
+              "escalate": false
+            }
+          ]
+        },
+        {
+          "id": "stage_personal_details",
+          "funnelId": "funnel_bob_credit_card",
+          "title": "Personal Details",
+          "goal": "Collect name, age, gender, and related details.",
+          "description": "Customer should complete the personal details form.",
+          "order": 2,
+          "isParallel": false,
+          "policies": [],
+          "systemObjections": [
+            {
+              "id": "obj_personal_001",
+              "type": "system",
+              "title": "PAN detail mismatch",
+              "description": "System validation failed because PAN data does not match the entered details.",
+              "handlingScript": "Help the customer verify PAN inputs and retry.",
+              "escalate": true
+            }
+          ],
+          "customerObjections": []
+        }
+      ]
+    }
+  ],
+  "funnelContexts": [
+    {
+      "customerId": "cust_001",
+      "funnelId": "funnel_bob_credit_card",
+      "currentStageId": "stage_mobile_verification",
+      "completedStageIds": [],
+      "progressionHistory": [
+        {
+          "stageId": "stage_mobile_verification",
+          "enteredAt": "2026-03-10T10:00:00.000Z",
+          "outcome": "dropped",
+          "notes": "Customer abandoned OTP verification."
+        }
+      ],
+      "anticipatedObjections": [
+        {
+          "id": "obj_mobile_001",
+          "type": "customer",
+          "title": "Did not receive OTP",
+          "description": "Customer did not receive or could not access the OTP.",
+          "handlingScript": "Guide the customer to request a fresh OTP.",
+          "escalate": false
+        }
+      ]
+    },
+    {
+      "customerId": "cust_002",
+      "funnelId": "funnel_bob_credit_card",
+      "currentStageId": "stage_personal_details",
+      "completedStageIds": [
+        "stage_mobile_verification"
+      ],
+      "progressionHistory": [
+        {
+          "stageId": "stage_mobile_verification",
+          "enteredAt": "2026-03-10T10:00:00.000Z",
+          "exitedAt": "2026-03-10T10:00:00.000Z",
+          "outcome": "completed"
+        },
+        {
+          "stageId": "stage_personal_details",
+          "enteredAt": "2026-03-10T10:00:00.000Z",
+          "outcome": "dropped",
+          "notes": "Customer abandoned during form entry."
+        }
+      ],
+      "anticipatedObjections": [
+        {
+          "id": "obj_personal_001",
+          "type": "system",
+          "title": "PAN detail mismatch",
+          "description": "System validation failed because PAN data does not match the entered details.",
+          "handlingScript": "Help the customer verify PAN inputs and retry.",
+          "escalate": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,11 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { mockFunnels } from '../adapters/crm/mock-crm.data';
+import { Inject, Injectable } from '@nestjs/common';
 import { Objection } from '../common/models/funnel.model';
+import { FunnelRepository } from '../repositories/funnel.repository';
+import { FUNNEL_REPOSITORY } from '../repositories/repository.tokens';
 
 @Injectable()
 export class ObjectionDatabaseService {
+  constructor(@Inject(FUNNEL_REPOSITORY) private readonly funnelRepository: FunnelRepository) {}
+
   async getForStage(funnelId: string, stageId: string): Promise<Objection[]> {
-    const funnel = mockFunnels.find((entry) => entry.id === funnelId);
+    const funnel = await this.funnelRepository.findById(funnelId);
     if (!funnel) {
       return [];
     }

@@ -1,4 +1,4 @@
-import { mockCustomers } from 'src/adapters/crm/mock-crm.data';
+import { customersFixture } from '../unit/crm-test-fixtures';
 
-export const customerFixture = structuredClone(mockCustomers[0]);
-export const secondaryCustomerFixture = structuredClone(mockCustomers[1]);
+export const customerFixture = structuredClone(customersFixture[0]);
+export const secondaryCustomerFixture = structuredClone(customersFixture[1]);

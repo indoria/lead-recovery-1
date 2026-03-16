@@ -7,12 +7,12 @@ export class FunnelsController {
   constructor(private readonly funnelsService: FunnelsService) {}
 
   @Get()
-  list() {
-    return this.funnelsService.list();
+  async list() {
+    return { items: await this.funnelsService.list() };
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() payload: Partial<Funnel>) {
-    return this.funnelsService.update(id, payload);
+  async update(@Param('id') id: string, @Body() payload: Partial<Funnel>) {
+    return { item: await this.funnelsService.update(id, payload) };
   }
 }

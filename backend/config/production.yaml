@@ -1,0 +1,23 @@
+app:
+  environment: production
+
+crm:
+  adapter: internal
+  baseUrl: https://crm.internal.local
+  timeout: 8000
+  supportsContextFusion: true
+
+logging:
+  level: info
+
+stt:
+  provider: sarvam
+
+tts:
+  provider: elevenlabs
+
+telephony:
+  provider: twilio
+
+llm:
+  provider: gemini

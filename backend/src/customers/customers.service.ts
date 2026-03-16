@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { mockCustomers, mockLeads } from '../adapters/crm/mock-crm.data';
+import { Inject, Injectable } from '@nestjs/common';
+import { CustomerRepository } from '../repositories/customer.repository';
+import { LeadRepository } from '../repositories/lead.repository';
+import { CUSTOMER_REPOSITORY, LEAD_REPOSITORY } from '../repositories/repository.tokens';
 
 export interface CustomerListItem {
   id: string;
@@ -11,10 +13,16 @@ export interface CustomerListItem {
 
 @Injectable()
 export class CustomersService {
-  list(): CustomerListItem[] {
-    const leadByCustomer = new Map(mockLeads.map((lead) => [lead.customerId, lead]));
+  constructor(
+    @Inject(CUSTOMER_REPOSITORY) private readonly customerRepository: CustomerRepository,
+    @Inject(LEAD_REPOSITORY) private readonly leadRepository: LeadRepository,
+  ) {}
 
-    return mockCustomers.map((customer) => {
+  async list(): Promise<CustomerListItem[]> {
+    const [customers, leads] = await Promise.all([this.customerRepository.findAll(), this.leadRepository.findAll()]);
+    const leadByCustomer = new Map(leads.map((lead) => [lead.customerId, lead]));
+
+    return customers.map((customer) => {
       const lead = leadByCustomer.get(customer.id);
       const score = this.scoreFromLead(lead?.status);
       return {
@@ -27,8 +35,9 @@ export class CustomersService {
     });
   }
 
-  getById(id: string): CustomerListItem | undefined {
-    return this.list().find((customer) => customer.id === id);
+  async getById(id: string): Promise<CustomerListItem | undefined> {
+    const customers = await this.list();
+    return customers.find((customer) => customer.id === id);
   }
 
   private scoreFromLead(status: string | undefined): number {

@@ -1,10 +1,14 @@
-import { Customer } from '../../common/models/customer.model';
-import { Funnel, FunnelContext } from '../../common/models/funnel.model';
-import { Lead } from '../../common/models/lead.model';
+import { MockCRMAdapter } from 'src/adapters/crm/mock-crm-adapter';
+import { Customer } from 'src/common/models/customer.model';
+import { Funnel, FunnelContext } from 'src/common/models/funnel.model';
+import { Lead } from 'src/common/models/lead.model';
+import { CustomerRepository } from 'src/repositories/customer.repository';
+import { LeadRepository } from 'src/repositories/lead.repository';
+import { FunnelContextRepository } from 'src/repositories/funnel-context.repository';
 
 const now = new Date('2026-03-10T10:00:00.000Z');
 
-export const mockCustomers: Customer[] = [
+export const customersFixture: Customer[] = [
   {
     id: 'cust_001',
     name: 'Riya Sharma',
@@ -25,7 +29,7 @@ export const mockCustomers: Customer[] = [
   },
 ];
 
-export const mockLeads: Lead[] = [
+export const leadsFixture: Lead[] = [
   {
     id: 'lead_001',
     customerId: 'cust_001',
@@ -48,22 +52,14 @@ export const mockLeads: Lead[] = [
   },
 ];
 
-export const mockFunnels: Funnel[] = [
+export const funnelsFixture: Funnel[] = [
   {
     id: 'funnel_bob_credit_card',
     productId: 'product_bob_credit_card',
     title: 'Bank of Baroda Credit Card Funnel',
     description: 'Lead recovery workflow for the Bank of Baroda credit card journey.',
     isActive: true,
-    policies: [
-      {
-        id: 'policy_001',
-        scope: 'funnel',
-        key: 'call-window',
-        value: '09:00-18:00',
-        description: 'Calls are allowed during business hours only.',
-      },
-    ],
+    policies: [],
     stages: [
       {
         id: 'stage_mobile_verification',
@@ -111,7 +107,7 @@ export const mockFunnels: Funnel[] = [
   },
 ];
 
-export const mockFunnelContexts: FunnelContext[] = [
+export const funnelContextsFixture: FunnelContext[] = [
   {
     customerId: 'cust_001',
     funnelId: 'funnel_bob_credit_card',
@@ -125,7 +121,16 @@ export const mockFunnelContexts: FunnelContext[] = [
         notes: 'Customer abandoned OTP verification.',
       },
     ],
-    anticipatedObjections: mockFunnels[0].stages[0].customerObjections,
+    anticipatedObjections: [
+      {
+        id: 'obj_mobile_001',
+        type: 'customer',
+        title: 'Did not receive OTP',
+        description: 'Customer did not receive or could not access the OTP.',
+        handlingScript: 'Guide the customer to request a fresh OTP.',
+        escalate: false,
+      },
+    ],
   },
   {
     customerId: 'cust_002',
@@ -146,6 +151,46 @@ export const mockFunnelContexts: FunnelContext[] = [
         notes: 'Customer abandoned during form entry.',
       },
     ],
-    anticipatedObjections: mockFunnels[0].stages[1].systemObjections,
+    anticipatedObjections: [
+      {
+        id: 'obj_personal_001',
+        type: 'system',
+        title: 'PAN detail mismatch',
+        description: 'System validation failed because PAN data does not match the entered details.',
+        handlingScript: 'Help the customer verify PAN inputs and retry.',
+        escalate: true,
+      },
+    ],
   },
 ];
+
+export function createMockCRMAdapter(): MockCRMAdapter {
+  const leads = structuredClone(leadsFixture);
+
+  const customerRepository: CustomerRepository = {
+    findAll: async () => structuredClone(customersFixture),
+    findById: async (id: string) => structuredClone(customersFixture.find((entry) => entry.id === id) ?? null),
+  };
+
+  const leadRepository: LeadRepository = {
+    findAll: async () => structuredClone(leads),
+    findById: async (id: string) => structuredClone(leads.find((entry) => entry.id === id) ?? null),
+    findByFunnelStage: async (funnelId: string, stageId: string) =>
+      structuredClone(leads.filter((entry) => entry.funnelId === funnelId && entry.stageId === stageId)),
+    updateStatus: async (leadId, status) => {
+      const target = leads.find((entry) => entry.id === leadId);
+      if (target) {
+        target.status = status;
+      }
+    },
+  };
+
+  const funnelContextRepository: FunnelContextRepository = {
+    findByCustomerAndFunnel: async (customerId: string, funnelId: string) =>
+      structuredClone(
+        funnelContextsFixture.find((entry) => entry.customerId === customerId && entry.funnelId === funnelId) ?? null,
+      ),
+  };
+
+  return new MockCRMAdapter(customerRepository, leadRepository, funnelContextRepository);
+}

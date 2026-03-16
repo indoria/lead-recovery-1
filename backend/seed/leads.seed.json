@@ -1,0 +1,22 @@
+[
+  {
+    "id": "lead_001",
+    "customerId": "cust_001",
+    "funnelId": "funnel_bob_credit_card",
+    "stageId": "stage_mobile_verification",
+    "status": "scheduled",
+    "callAttempts": 0,
+    "dropOffReason": "OTP not completed",
+    "metadata": {},
+    "scheduledCallAt": "2026-03-10T10:00:00.000Z"
+  },
+  {
+    "id": "lead_002",
+    "customerId": "cust_002",
+    "funnelId": "funnel_bob_credit_card",
+    "stageId": "stage_personal_details",
+    "status": "pending",
+    "callAttempts": 1,
+    "metadata": {}
+  }
+]

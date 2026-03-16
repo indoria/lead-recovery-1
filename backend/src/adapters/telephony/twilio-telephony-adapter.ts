@@ -6,7 +6,7 @@ import { CallInitiationRequest, TelephonyAdapter, TelephonyCallSession } from '.
 export class TwilioTelephonyAdapter implements TelephonyAdapter {
   constructor(private readonly configService: AppConfigService) {}
 
-  async initiateCall(req: CallInitiationRequest): Promise<TelephonyCallSession> {
+  private getCredentials(): { accountSid: string; authToken: string } {
     const config = this.configService.getConfig().telephony.twilio;
     const accountSid = process.env[config.accountSidEnvVar] ?? process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env[config.authTokenEnvVar] ?? process.env.TWILIO_AUTH_TOKEN;
@@ -14,6 +14,13 @@ export class TwilioTelephonyAdapter implements TelephonyAdapter {
     if (!accountSid || !authToken) {
       throw new Error('Twilio credentials are not configured');
     }
+
+    return { accountSid, authToken };
+  }
+
+  async initiateCall(req: CallInitiationRequest): Promise<TelephonyCallSession> {
+    const config = this.configService.getConfig().telephony.twilio;
+    const { accountSid, authToken } = this.getCredentials();
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), config.timeoutMs);
@@ -51,11 +58,62 @@ export class TwilioTelephonyAdapter implements TelephonyAdapter {
   }
 
   async hangUp(providerCallId: string): Promise<void> {
-    void providerCallId;
+    const config = this.configService.getConfig().telephony.twilio;
+    const { accountSid, authToken } = this.getCredentials();
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), config.timeoutMs);
+
+    try {
+      const form = new URLSearchParams({ Status: 'completed' });
+      const response = await fetch(
+        `${config.baseUrl}/2010-04-01/Accounts/${accountSid}/Calls/${encodeURIComponent(providerCallId)}.json`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: form.toString(),
+          signal: controller.signal,
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Twilio hangup failed with status ${response.status}`);
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
   async streamAudio(providerCallId: string, audio: Buffer): Promise<void> {
-    void providerCallId;
-    void audio;
+    const config = this.configService.getConfig().telephony.twilio;
+    const { accountSid, authToken } = this.getCredentials();
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), config.timeoutMs);
+
+    try {
+      // Twilio user-defined messages let active media stream handlers consume audio payloads.
+      const response = await fetch(
+        `${config.baseUrl}/2010-04-01/Accounts/${accountSid}/Calls/${encodeURIComponent(providerCallId)}/UserDefinedMessages.json`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ Content: audio.toString('base64') }),
+          signal: controller.signal,
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Twilio audio stream failed with status ${response.status}`);
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 }

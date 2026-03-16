@@ -1,32 +1,22 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { mockFunnels } from '../adapters/crm/mock-crm.data';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Funnel } from '../common/models/funnel.model';
+import { FunnelRepository } from '../repositories/funnel.repository';
+import { FUNNEL_REPOSITORY } from '../repositories/repository.tokens';
 
 @Injectable()
 export class FunnelsService {
-  private readonly funnels = structuredClone(mockFunnels);
+  constructor(@Inject(FUNNEL_REPOSITORY) private readonly funnelRepository: FunnelRepository) {}
 
-  list(): Funnel[] {
-    return structuredClone(this.funnels);
+  async list(): Promise<Funnel[]> {
+    return this.funnelRepository.findAll();
   }
 
-  update(id: string, patch: Partial<Funnel>): Funnel {
-    const index = this.funnels.findIndex((entry) => entry.id === id);
-    if (index < 0) {
+  async update(id: string, patch: Partial<Funnel>): Promise<Funnel> {
+    const updated = await this.funnelRepository.update(id, sanitizePatch(patch));
+    if (!updated) {
       throw new NotFoundException(`Funnel not found: ${id}`);
     }
-
-    const existing = this.funnels[index];
-    const updated: Funnel = {
-      ...existing,
-      ...sanitizePatch(patch),
-      id: existing.id,
-      stages: Array.isArray(patch.stages) ? patch.stages : existing.stages,
-      policies: Array.isArray(patch.policies) ? patch.policies : existing.policies,
-    };
-
-    this.funnels[index] = updated;
-    return structuredClone(updated);
+    return updated;
   }
 }
 

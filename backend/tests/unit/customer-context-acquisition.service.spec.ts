@@ -1,16 +1,16 @@
 import { AppLoggerService } from 'src/common/logger/app-logger.service';
 import { CorrelationIdService } from 'src/common/logger/correlation-id.service';
 import { AppConfigService } from 'src/common/config/app-config.service';
-import { MockCRMAdapter } from 'src/adapters/crm/mock-crm-adapter';
 import { CustomerContextAcquisitionService } from 'src/modules/customer-context-acquisition/customer-context-acquisition.service';
 import { buildExecutionContext, testConfig } from './test-helpers';
+import { createMockCRMAdapter } from './crm-test-fixtures';
 
 describe('CustomerContextAcquisitionService', () => {
   const configService = { getConfig: () => testConfig } as AppConfigService;
   const loggerFactory = new AppLoggerService(configService, new CorrelationIdService());
 
   it('returns funnel context for a valid customer and funnel', async () => {
-    const service = new CustomerContextAcquisitionService(new MockCRMAdapter(), loggerFactory);
+    const service = new CustomerContextAcquisitionService(createMockCRMAdapter(), loggerFactory);
 
     const result = await service.execute(
       { customerId: 'cust_001', funnelId: 'funnel_bob_credit_card' },
@@ -22,7 +22,7 @@ describe('CustomerContextAcquisitionService', () => {
   });
 
   it('throws when funnel context is missing', async () => {
-    const service = new CustomerContextAcquisitionService(new MockCRMAdapter(), loggerFactory);
+    const service = new CustomerContextAcquisitionService(createMockCRMAdapter(), loggerFactory);
 
     await expect(
       service.execute(
@@ -33,7 +33,7 @@ describe('CustomerContextAcquisitionService', () => {
   });
 
   it('validates required inputs', () => {
-    const service = new CustomerContextAcquisitionService(new MockCRMAdapter(), loggerFactory);
+    const service = new CustomerContextAcquisitionService(createMockCRMAdapter(), loggerFactory);
 
     expect(service.validateInputs({ customerId: '', funnelId: '' })).toEqual([
       { field: 'customerId', message: 'customerId is required' },

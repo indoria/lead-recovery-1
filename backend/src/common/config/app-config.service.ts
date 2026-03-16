@@ -58,6 +58,20 @@ export class AppConfigService {
       overrides.crm = { ...(overrides.crm as PlainObject | undefined), adapter: process.env.CRM_ADAPTER };
     }
 
+    if (process.env.CRM_BASE_URL !== undefined) {
+      overrides.crm = {
+        ...(overrides.crm as PlainObject | undefined),
+        baseUrl: process.env.CRM_BASE_URL,
+      };
+    }
+
+    if (process.env.CRM_TIMEOUT !== undefined) {
+      overrides.crm = {
+        ...(overrides.crm as PlainObject | undefined),
+        timeout: Number(process.env.CRM_TIMEOUT),
+      };
+    }
+
     if (process.env.STT_PROVIDER !== undefined) {
       overrides.stt = { ...(overrides.stt as PlainObject | undefined), provider: process.env.STT_PROVIDER };
     }

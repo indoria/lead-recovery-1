@@ -9,6 +9,7 @@ import { FunnelsModule } from './funnels/funnels.module';
 import { HealthModule } from './health/health.module';
 import { LeadsModule } from './leads/leads.module';
 import { CRMAdapterModule } from './adapters/crm/crm-adapter.module';
+import { DataModule } from './data/data.module';
 import { CallInitiationModule } from './modules/call-initiation/call-initiation.module';
 import { CallPreparationModule } from './modules/call-preparation/call-preparation.module';
 import { AccomplishmentAssessmentModule } from './modules/accomplishment-assessment/accomplishment-assessment.module';
@@ -23,10 +24,14 @@ import { ResponseProcessingModule } from './modules/response-processing/response
 import { SuggestionsModule } from './suggestions/suggestions.module';
 import { WelcomeMessageModule } from './modules/welcome-message/welcome-message.module';
 import { WorkflowModule } from './workflow/workflow.module';
+import { RepositoriesModule } from './repositories/repositories.module';
+import { TelephonyModule } from './telephony/telephony.module';
 
 @Module({
   imports: [
     AppConfigModule,
+    DataModule,
+    RepositoriesModule,
     LoggerModule,
     AgentsModule,
     CustomersModule,
@@ -36,6 +41,7 @@ import { WorkflowModule } from './workflow/workflow.module';
     ModuleRegistryModule,
     HealthModule,
     WorkflowModule,
+    TelephonyModule,
     AccomplishmentAssessmentModule,
     CustomerDataRetrievalModule,
     CustomerContextAcquisitionModule,
