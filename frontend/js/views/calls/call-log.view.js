@@ -20,6 +20,11 @@ export function renderCallLogView() {
 
   void api.getCallLog().then((rows) => {
     const list = Array.isArray(rows) ? rows : rows.items || [];
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="muted">No records found</td></tr>';
+      return;
+    }
+
     tbody.innerHTML = list
       .map((row) => `<tr><td>${sanitize(new Date(row.at).toLocaleString())}</td><td>${sanitize(String(row.customer || ''))}</td><td>${sanitize(String(row.outcome || ''))}</td><td>${sanitize(String(row.stage || ''))}</td></tr>`)
       .join('');

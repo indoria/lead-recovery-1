@@ -98,6 +98,11 @@ export function renderAnalyticsView() {
     drawLine(lineChart, data.series, '#f2a541');
     drawBars(barChart, data.outcomes, '#67b3f3');
 
+    if (!topLeads.length) {
+      topLeadsBody.innerHTML = '<tr><td colspan="2" class="muted">No records found</td></tr>';
+      return;
+    }
+
     topLeadsBody.innerHTML = topLeads
       .map((lead) => `<tr><td>${sanitize(String(lead.name || ''))}</td><td>${sanitize(String(Math.round((lead.probability || 0) * 100)))}%</td></tr>`)
       .join('');

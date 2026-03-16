@@ -30,6 +30,12 @@ export function renderActiveCallsView() {
   async function loadCalls() {
     const rows = await api.getActiveCalls();
     const list = Array.isArray(rows) ? rows : rows.items || [];
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="muted">No records found</td></tr>';
+      selectedCallId = null;
+      return;
+    }
+
     tbody.innerHTML = list
       .map(
         (call) => `

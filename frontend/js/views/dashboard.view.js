@@ -34,7 +34,12 @@ export function renderDashboardView() {
       makeMetric('Failed', summary.today.failed)
     );
 
-    feed.innerHTML = `<h3>Recent activity</h3><ul>${summary.recent.map((entry) => `<li>${sanitize(entry)}</li>`).join('')}</ul>`;
+    const recent = Array.isArray(summary.recent) ? summary.recent : [];
+    if (!recent.length) {
+      feed.innerHTML = '<h3>Recent activity</h3><p class="muted">No records found</p>';
+    } else {
+      feed.innerHTML = `<h3>Recent activity</h3><ul>${recent.map((entry) => `<li>${sanitize(entry)}</li>`).join('')}</ul>`;
+    }
     health.innerHTML = `<h3>System health</h3>
       <p class="muted">API latency: ${sanitize(String(summary.apiLatencyMs))} ms</p>
       <p class="muted">Uptime: ${sanitize(String(summary.uptime))}%</p>

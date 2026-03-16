@@ -22,6 +22,11 @@ export function renderAgentsView() {
   const form = root.querySelector('#agentForm');
 
   function renderAgents(rows) {
+    if (!rows.length) {
+      list.innerHTML = '<p class="muted">No records found</p>';
+      return;
+    }
+
     list.innerHTML = rows
       .map(
         (agent) => `

@@ -14,6 +14,11 @@ export function renderFunnelsView() {
 
   void api.getFunnels().then((funnels) => {
     const rows = Array.isArray(funnels) ? funnels : funnels.items || [];
+    if (!rows.length) {
+      list.innerHTML = '<p class="muted">No records found</p>';
+      return;
+    }
+
     list.innerHTML = rows
       .map(
         (funnel) => `

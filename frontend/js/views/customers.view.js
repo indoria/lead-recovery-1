@@ -5,6 +5,11 @@ import { el } from '../utils/utility.js';
 import { sanitize } from '../utils/security.js';
 
 function renderRows(tbody, records) {
+  if (!records.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="muted">No records found</td></tr>';
+    return;
+  }
+
   tbody.innerHTML = records
     .map(
       (row) => `

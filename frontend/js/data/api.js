@@ -2,47 +2,25 @@ import * as http from '../http.js';
 
 const fallback = {
   summary: {
-    today: { total: 38, answered: 27, recovered: 11, escalated: 4, failed: 12 },
-    weeklyRate: 0.32,
-    pendingEscalations: 4,
-    pendingObjections: 7,
-    apiLatencyMs: 420,
-    uptime: 99.4,
-    recent: [
-      'Call recovered for lead-133',
-      'Escalation created for lead-144',
-      'New leads imported: 42',
-    ],
+    today: { total: 0, answered: 0, recovered: 0, escalated: 0, failed: 0 },
+    weeklyRate: 0,
+    pendingEscalations: 0,
+    pendingObjections: 0,
+    apiLatencyMs: 0,
+    uptime: 0,
+    recent: [],
   },
-  customers: [
-    { id: 'c-101', name: 'Asha Nair', phone: '+91-9988776655', status: 'warm', score: 0.72 },
-    { id: 'c-102', name: 'Rahul Das', phone: '+91-9966554433', status: 'cold', score: 0.33 },
-    { id: 'c-103', name: 'Mina Shah', phone: '+91-9900112233', status: 'hot', score: 0.84 },
-  ],
-  funnels: [
-    { id: 'f-1', product: 'Insurance', name: 'Renewal Recovery', active: true, stages: ['Intro', 'OTP', 'Close'] },
-    { id: 'f-2', product: 'Loans', name: 'Loan Reactivation', active: true, stages: ['Intro', 'Qualify', 'Offer', 'Close'] },
-  ],
-  activeCalls: [
-    { id: 'call-11', customer: 'Asha Nair', funnel: 'Renewal Recovery', stage: 'OTP', status: 'active', durationSec: 84 },
-  ],
-  callLog: [
-    { id: 'call-01', customer: 'Mina Shah', outcome: 'recovered', stage: 'Close', at: '2026-03-12T10:15:00Z' },
-    { id: 'call-02', customer: 'Rahul Das', outcome: 'failed', stage: 'Intro', at: '2026-03-12T11:42:00Z' },
-  ],
-  agents: [
-    { id: 'ag-1', name: 'Maya Hindi', language: 'hi-IN', voiceId: 'eleven-45', calls: 102, avgScore: 0.74, escalationRate: 0.16 },
-    { id: 'ag-2', name: 'Arjun English', language: 'en-IN', voiceId: 'eleven-09', calls: 88, avgScore: 0.69, escalationRate: 0.2 },
-  ],
+  customers: [],
+  funnels: [],
+  activeCalls: [],
+  callLog: [],
+  agents: [],
   analytics: {
-    series: [0.21, 0.24, 0.28, 0.31, 0.27, 0.33, 0.35],
-    outcomes: { recovered: 42, failed: 23, escalated: 13 },
-    objections: { pricing: 11, trust: 8, timing: 6 },
-    dropoff: { intro: 100, qualify: 74, offer: 54, close: 31 },
-    topLeads: [
-      { id: 'c-103', name: 'Mina Shah', probability: 0.91 },
-      { id: 'c-101', name: 'Asha Nair', probability: 0.88 },
-    ],
+    series: [],
+    outcomes: { recovered: 0, failed: 0, escalated: 0 },
+    objections: {},
+    dropoff: {},
+    topLeads: [],
   },
 };
 
@@ -106,13 +84,7 @@ export function getActiveCalls() {
 }
 
 export function getTranscript(callId) {
-  return tryFetch(() => http.get(`/calls/${callId}/transcript`, { skipCache: true }), {
-    lines: [
-      'Agent: Hello, this is Lead Recovery support.',
-      'Customer: I could not complete the flow yesterday.',
-      'Agent: I can help you finish it now. Ready for OTP verification?',
-    ],
-  });
+  return tryFetch(() => http.get(`/calls/${callId}/transcript`, { skipCache: true }), { lines: [] });
 }
 
 export function hangupCall(callId) {
