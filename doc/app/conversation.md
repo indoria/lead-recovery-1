@@ -90,7 +90,10 @@ This document outlines a modular, granular backend system for managing the AI ca
 - Identify new objections
 - Predict conversation success probability
 - Train improved models
+- Persist inbound API calls, telephony webhooks, workflow milestones, and third-party API start/end events in SQLite for durable analytics
 **Adaptability**: Can be fused with any step or handled by external logging services.
+
+**Implementation note**: The backend persists call analytics events to a local SQLite database at `backend/data/call-events.sqlite` by default, overridable with `CALL_EVENT_DB_PATH`. Each record includes an event name, category, correlation id, timestamps, request ids, and optional call/session identifiers so webhook receipts and outbound provider calls can be stitched into a single call timeline.
 
 ## Adaptability Framework
 The system must support dynamic step fusion based on third-party service capabilities:

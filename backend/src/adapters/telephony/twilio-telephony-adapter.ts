@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { OutboundApiTracerService } from '../../analytics/outbound-api-tracer.service';
 import { AppConfigService } from '../../common/config/app-config.service';
 import { CallInitiationRequest, TelephonyAdapter, TelephonyCallSession } from './telephony-adapter.interface';
 
 @Injectable()
 export class TwilioTelephonyAdapter implements TelephonyAdapter {
-  constructor(private readonly configService: AppConfigService) {}
+  constructor(
+    private readonly configService: AppConfigService,
+    private readonly apiTracer: OutboundApiTracerService,
+  ) {}
 
   private getCredentials(): { accountSid: string; authToken: string } {
     const config = this.configService.getConfig().telephony.twilio;
@@ -33,15 +37,27 @@ export class TwilioTelephonyAdapter implements TelephonyAdapter {
         StatusCallback: req.callbackUrl,
       });
 
-      const response = await fetch(`${config.baseUrl}/2010-04-01/Accounts/${accountSid}/Calls.json`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
+      const response = await this.apiTracer.fetch(
+        `${config.baseUrl}/2010-04-01/Accounts/${accountSid}/Calls.json`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: form.toString(),
+          signal: controller.signal,
         },
-        body: form.toString(),
-        signal: controller.signal,
-      });
+        {
+          provider: 'twilio',
+          operation: 'initiate-call',
+          metadata: {
+            callbackUrl: req.callbackUrl,
+            fromNumber: req.fromNumber,
+            toNumber: req.toNumber,
+          },
+        },
+      );
 
       if (!response.ok) {
         throw new Error(`Twilio call request failed with status ${response.status}`);
@@ -66,7 +82,7 @@ export class TwilioTelephonyAdapter implements TelephonyAdapter {
 
     try {
       const form = new URLSearchParams({ Status: 'completed' });
-      const response = await fetch(
+      const response = await this.apiTracer.fetch(
         `${config.baseUrl}/2010-04-01/Accounts/${accountSid}/Calls/${encodeURIComponent(providerCallId)}.json`,
         {
           method: 'POST',
@@ -76,6 +92,11 @@ export class TwilioTelephonyAdapter implements TelephonyAdapter {
           },
           body: form.toString(),
           signal: controller.signal,
+        },
+        {
+          provider: 'twilio',
+          operation: 'hang-up',
+          providerCallId,
         },
       );
 
@@ -96,7 +117,7 @@ export class TwilioTelephonyAdapter implements TelephonyAdapter {
 
     try {
       // Twilio user-defined messages let active media stream handlers consume audio payloads.
-      const response = await fetch(
+      const response = await this.apiTracer.fetch(
         `${config.baseUrl}/2010-04-01/Accounts/${accountSid}/Calls/${encodeURIComponent(providerCallId)}/UserDefinedMessages.json`,
         {
           method: 'POST',
@@ -106,6 +127,14 @@ export class TwilioTelephonyAdapter implements TelephonyAdapter {
           },
           body: JSON.stringify({ Content: audio.toString('base64') }),
           signal: controller.signal,
+        },
+        {
+          provider: 'twilio',
+          operation: 'stream-audio',
+          providerCallId,
+          metadata: {
+            audioBytes: audio.byteLength,
+          },
         },
       );
 

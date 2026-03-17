@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { OutboundApiTracerService } from '../../analytics/outbound-api-tracer.service';
 import { AppConfigService } from '../../common/config/app-config.service';
 import { CallInitiationRequest, TelephonyAdapter, TelephonyCallSession } from './telephony-adapter.interface';
 
 @Injectable()
 export class ExotelTelephonyAdapter implements TelephonyAdapter {
-  constructor(private readonly configService: AppConfigService) {}
+  constructor(
+    private readonly configService: AppConfigService,
+    private readonly apiTracer: OutboundApiTracerService,
+  ) {}
 
   private getCredentials(): { sid: string; token: string } {
     const config = this.configService.getConfig().telephony.exotel;
@@ -34,15 +38,27 @@ export class ExotelTelephonyAdapter implements TelephonyAdapter {
         Url: req.callbackUrl,
       });
 
-      const response = await fetch(`https://${config.subdomain}/v1/Accounts/${sid}/Calls/connect`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${Buffer.from(`${sid}:${token}`).toString('base64')}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
+      const response = await this.apiTracer.fetch(
+        `https://${config.subdomain}/v1/Accounts/${sid}/Calls/connect`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Basic ${Buffer.from(`${sid}:${token}`).toString('base64')}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: form.toString(),
+          signal: controller.signal,
         },
-        body: form.toString(),
-        signal: controller.signal,
-      });
+        {
+          provider: 'exotel',
+          operation: 'initiate-call',
+          metadata: {
+            callbackUrl: req.callbackUrl,
+            fromNumber: req.fromNumber,
+            toNumber: req.toNumber,
+          },
+        },
+      );
 
       if (!response.ok) {
         throw new Error(`Exotel call request failed with status ${response.status}`);
@@ -69,7 +85,7 @@ export class ExotelTelephonyAdapter implements TelephonyAdapter {
 
     try {
       const form = new URLSearchParams({ Status: 'completed' });
-      const response = await fetch(
+      const response = await this.apiTracer.fetch(
         `https://${config.subdomain}/v1/Accounts/${sid}/Calls/${encodeURIComponent(providerCallId)}`,
         {
           method: 'POST',
@@ -79,6 +95,11 @@ export class ExotelTelephonyAdapter implements TelephonyAdapter {
           },
           body: form.toString(),
           signal: controller.signal,
+        },
+        {
+          provider: 'exotel',
+          operation: 'hang-up',
+          providerCallId,
         },
       );
 
@@ -99,7 +120,7 @@ export class ExotelTelephonyAdapter implements TelephonyAdapter {
 
     try {
       // Exotel uses callback-driven playback; this endpoint pushes a chunk for pull/playback flows.
-      const response = await fetch(
+      const response = await this.apiTracer.fetch(
         `https://${config.subdomain}/v1/Accounts/${sid}/Calls/${encodeURIComponent(providerCallId)}/stream`,
         {
           method: 'POST',
@@ -109,6 +130,14 @@ export class ExotelTelephonyAdapter implements TelephonyAdapter {
           },
           body: JSON.stringify({ audio: audio.toString('base64'), encoding: 'base64' }),
           signal: controller.signal,
+        },
+        {
+          provider: 'exotel',
+          operation: 'stream-audio',
+          providerCallId,
+          metadata: {
+            audioBytes: audio.byteLength,
+          },
         },
       );
 

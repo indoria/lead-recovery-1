@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { CallEventStoreService } from '../../analytics/call-event-store.service';
 import { TELEPHONY_ADAPTER } from '../../adapters/integration.tokens';
 import { TelephonyAdapter } from '../../adapters/telephony/telephony-adapter.interface';
 import { AppConfigService } from '../../common/config/app-config.service';
@@ -33,6 +34,7 @@ export class CallInitiationService implements WorkflowModule<CallInitiationInput
     private readonly telephonyAdapter: TelephonyAdapter,
     private readonly loggerFactory: AppLoggerService,
     private readonly configService: AppConfigService,
+    private readonly callEventStore: CallEventStoreService,
   ) {
     this.logger = this.loggerFactory.createLogger(this.id);
   }
@@ -60,6 +62,21 @@ export class CallInitiationService implements WorkflowModule<CallInitiationInput
     };
 
     this.logger.info('Call initiated', output);
+    this.callEventStore.recordEvent({
+      eventName: 'call.initiated',
+      category: 'workflow',
+      direction: 'internal',
+      phase: 'completed',
+      provider: this.configService.getConfig().telephony.provider,
+      callSessionId: output.callSessionId,
+      providerCallId: output.providerCallId,
+      occurredAt: new Date().toISOString(),
+      payload: {
+        customerId: input.customer.id,
+        leadId: input.lead.id,
+        status: output.status,
+      },
+    });
 
     return output;
   }

@@ -50,7 +50,15 @@ const createConfig = (maxPromptTokens = 4000): ResolvedConfig => ({
       timeoutMs: 5000,
     },
   },
-  logging: { level: 'debug', format: 'json', correlationIdHeader: 'X-Correlation-ID' },
+  logging: {
+    level: 'debug',
+    format: 'json',
+    correlationIdHeader: 'X-Correlation-ID',
+    sinks: {
+      console: true,
+      database: false,
+    },
+  },
   llm: {
     provider: 'gemini',
     hasBuiltInDeviation: false,

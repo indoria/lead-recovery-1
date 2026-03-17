@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { createHash } from 'crypto';
+import { OutboundApiTracerService } from '../../analytics/outbound-api-tracer.service';
 import { AppConfigService } from '../../common/config/app-config.service';
 import { MockTTSAdapter } from './mock-tts-adapter';
 import { TTSAdapter, TTSRequest, TTSResponse } from './tts-adapter.interface';
@@ -9,6 +10,7 @@ export class ElevenLabsTTSAdapter implements TTSAdapter {
   constructor(
     private readonly configService: AppConfigService,
     private readonly fallbackAdapter: MockTTSAdapter,
+    private readonly apiTracer: OutboundApiTracerService,
   ) {}
 
   async synthesize(req: TTSRequest): Promise<TTSResponse> {
@@ -23,19 +25,31 @@ export class ElevenLabsTTSAdapter implements TTSAdapter {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), config.timeoutMs);
     try {
-      const response = await fetch(`${config.baseUrl}/v1/text-to-speech/${voiceId}`, {
-        method: 'POST',
-        headers: {
-          'xi-api-key': apiKey,
-          'Content-Type': 'application/json',
-          Accept: 'audio/mpeg',
+      const response = await this.apiTracer.fetch(
+        `${config.baseUrl}/v1/text-to-speech/${voiceId}`,
+        {
+          method: 'POST',
+          headers: {
+            'xi-api-key': apiKey,
+            'Content-Type': 'application/json',
+            Accept: 'audio/mpeg',
+          },
+          body: JSON.stringify({
+            text: req.text,
+            model_id: 'eleven_multilingual_v2',
+          }),
+          signal: controller.signal,
         },
-        body: JSON.stringify({
-          text: req.text,
-          model_id: 'eleven_multilingual_v2',
-        }),
-        signal: controller.signal,
-      });
+        {
+          provider: 'elevenlabs',
+          operation: 'synthesize',
+          metadata: {
+            language: req.language,
+            textLength: req.text.length,
+            voiceId,
+          },
+        },
+      );
 
       if (!response.ok) {
         throw new Error(`ElevenLabs TTS request failed with status ${response.status}`);

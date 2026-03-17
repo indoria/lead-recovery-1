@@ -1,0 +1,86 @@
+.logs-view .logs-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.logs-view .log-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 4px 0 10px;
+}
+
+.logs-view table {
+  table-layout: fixed;
+}
+
+.logs-view th:nth-child(1),
+.logs-view td:nth-child(1) {
+  width: 170px;
+}
+
+.logs-view th:nth-child(2),
+.logs-view td:nth-child(2) {
+  width: 90px;
+}
+
+.logs-view th:nth-child(3),
+.logs-view td:nth-child(3) {
+  width: 170px;
+}
+
+.logs-view th:nth-child(4),
+.logs-view td:nth-child(4) {
+  width: 150px;
+}
+
+.logs-view th:nth-child(5),
+.logs-view td:nth-child(5),
+.logs-view th:nth-child(6),
+.logs-view td:nth-child(6) {
+  width: 110px;
+}
+
+.logs-view th:nth-child(8),
+.logs-view td:nth-child(8) {
+  width: 220px;
+}
+
+.logs-view .log-message {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.log-level-chip {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.log-level-debug {
+  background: #1d4f6b;
+  color: #cbeeff;
+}
+
+.log-level-info {
+  background: #1f5f43;
+  color: #d5ffe9;
+}
+
+.log-level-warn {
+  background: #6c4f1d;
+  color: #ffefcf;
+}
+
+.log-level-error,
+.log-level-fatal {
+  background: #6f1f2f;
+  color: #ffd7de;
+}

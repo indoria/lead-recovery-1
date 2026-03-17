@@ -50,6 +50,26 @@ export class AppConfigService {
       overrides.logging = { ...(overrides.logging as PlainObject | undefined), level: process.env.LOG_LEVEL };
     }
 
+    if (process.env.LOG_SINK_CONSOLE !== undefined) {
+      overrides.logging = {
+        ...(overrides.logging as PlainObject | undefined),
+        sinks: {
+          ...(((overrides.logging as PlainObject | undefined)?.sinks as PlainObject | undefined) ?? {}),
+          console: this.parseBooleanEnv(process.env.LOG_SINK_CONSOLE),
+        },
+      };
+    }
+
+    if (process.env.LOG_SINK_DATABASE !== undefined) {
+      overrides.logging = {
+        ...(overrides.logging as PlainObject | undefined),
+        sinks: {
+          ...(((overrides.logging as PlainObject | undefined)?.sinks as PlainObject | undefined) ?? {}),
+          database: this.parseBooleanEnv(process.env.LOG_SINK_DATABASE),
+        },
+      };
+    }
+
     if (process.env.JWT_SECRET !== undefined) {
       overrides.security = { ...(overrides.security as PlainObject | undefined), jwtSecret: process.env.JWT_SECRET };
     }
@@ -116,5 +136,9 @@ export class AppConfigService {
 
   private isPlainObject(value: unknown): value is PlainObject {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
+  }
+
+  private parseBooleanEnv(value: string): boolean {
+    return ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase());
   }
 }

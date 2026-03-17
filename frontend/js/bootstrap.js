@@ -21,6 +21,7 @@ import { renderCallLogView } from './views/calls/call-log.view.js';
 import { renderMakeCallView } from './views/calls/make-call.view.js';
 import { renderAgentsView } from './views/agents.view.js';
 import { renderAnalyticsView } from './views/analytics.view.js';
+import { renderLogsView } from './views/logs.view.js';
 import { renderAccountView } from './views/account.view.js';
 import { renderSettingsView } from './views/settings.view.js';
 import { renderLoginView } from './views/login.view.js';
@@ -154,6 +155,7 @@ function buildRoutes() {
     { path: '#/calls/make', render: renderMakeCallView, requiresAuth: true, roles: ['admin', 'sales_manager'] },
     { path: '#/agents', render: renderAgentsView, requiresAuth: true, roles: ['admin'] },
     { path: '#/analytics', render: renderAnalyticsView, requiresAuth: true },
+    { path: '#/analytics/logs', render: renderLogsView, requiresAuth: true },
     { path: '#/account', render: renderAccountView, requiresAuth: true },
     { path: '#/settings/:section', render: renderSettingsView, requiresAuth: true, roles: ['admin'] },
     { path: '#/login', render: renderLoginView, requiresAuth: false },

@@ -54,6 +54,10 @@ export interface ResolvedConfig {
     level: 'debug' | 'info' | 'warn' | 'error' | 'fatal';
     format: 'json' | 'pretty';
     correlationIdHeader: string;
+    sinks: {
+      console: boolean;
+      database: boolean;
+    };
   };
   llm: {
     provider: 'mock' | 'gemini';
@@ -200,11 +204,20 @@ const schema: JSONSchemaType<ResolvedConfig> = {
     logging: {
       type: 'object',
       additionalProperties: false,
-      required: ['level', 'format', 'correlationIdHeader'],
+      required: ['level', 'format', 'correlationIdHeader', 'sinks'],
       properties: {
         level: { type: 'string', enum: ['debug', 'info', 'warn', 'error', 'fatal'] },
         format: { type: 'string', enum: ['json', 'pretty'] },
         correlationIdHeader: { type: 'string' },
+        sinks: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['console', 'database'],
+          properties: {
+            console: { type: 'boolean' },
+            database: { type: 'boolean' },
+          },
+        },
       },
     },
     llm: {

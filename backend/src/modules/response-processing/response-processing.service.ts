@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { CallEventStoreService } from '../../analytics/call-event-store.service';
 import { LocalAudioCache } from '../../adapters/audio-cache/local-audio-cache';
 import { LLMAdapter, LLMMessage } from '../../adapters/llm/llm-adapter.interface';
 import { LLM_ADAPTER, STT_ADAPTER, TELEPHONY_ADAPTER, TTS_ADAPTER } from '../../adapters/integration.tokens';
@@ -50,6 +51,7 @@ export class ResponseProcessingService
     private readonly audioCache: LocalAudioCache,
     private readonly intentClassifierService: IntentClassifierService,
     private readonly loggerFactory: AppLoggerService,
+    private readonly callEventStore: CallEventStoreService,
   ) {
     this.logger = this.loggerFactory.createLogger(this.id);
   }
@@ -148,6 +150,19 @@ export class ResponseProcessingService
       providerCallId: input.providerCallId,
       turnNumber,
       intentLabel: output.intentLabel,
+    });
+    this.callEventStore.recordEvent({
+      eventName: 'conversation.turn',
+      category: 'workflow',
+      direction: 'internal',
+      phase: 'processed',
+      providerCallId: input.providerCallId,
+      occurredAt: new Date().toISOString(),
+      payload: {
+        turnNumber,
+        intentLabel: output.intentLabel,
+        agentAudioRef,
+      },
     });
 
     return output;

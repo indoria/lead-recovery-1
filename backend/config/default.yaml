@@ -47,6 +47,9 @@ logging:
   level: info
   format: json
   correlationIdHeader: X-Correlation-ID
+  sinks:
+    console: true
+    database: false
 
 llm:
   provider: mock

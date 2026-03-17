@@ -115,6 +115,20 @@ export function getTopLeads() {
   return tryFetch(() => http.get('/analytics/leads/top'), fallback.analytics.topLeads);
 }
 
+export function getLogs(filters = {}) {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') {
+      return;
+    }
+    params.set(key, String(value));
+  });
+
+  const query = params.toString();
+  const path = query.length > 0 ? `/analytics/logs?${query}` : '/analytics/logs';
+  return tryFetch(() => http.get(path, { skipCache: true }), { items: [] });
+}
+
 export function testIntegration(id) {
   return tryFetch(() => http.post(`/integrations/${id}/test`, {}), { ok: true });
 }

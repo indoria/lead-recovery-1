@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { CallEventStoreService } from '../../analytics/call-event-store.service';
 import { LocalAudioCache } from '../../adapters/audio-cache/local-audio-cache';
 import { TELEPHONY_ADAPTER, TTS_ADAPTER } from '../../adapters/integration.tokens';
 import { TelephonyAdapter } from '../../adapters/telephony/telephony-adapter.interface';
@@ -37,6 +38,7 @@ export class WelcomeMessageService implements WorkflowModule<WelcomeMessageInput
     private readonly telephonyAdapter: TelephonyAdapter,
     private readonly audioCache: LocalAudioCache,
     private readonly loggerFactory: AppLoggerService,
+    private readonly callEventStore: CallEventStoreService,
   ) {
     this.logger = this.loggerFactory.createLogger(this.id);
   }
@@ -90,6 +92,19 @@ export class WelcomeMessageService implements WorkflowModule<WelcomeMessageInput
       providerCallId: input.providerCallId,
       welcomeAudioRef: output.welcomeAudioRef,
       stageId: input.funnelContext.currentStageId,
+    });
+    this.callEventStore.recordEvent({
+      eventName: 'welcome.message',
+      category: 'workflow',
+      direction: 'internal',
+      phase: 'delivered',
+      callSessionId: undefined,
+      providerCallId: input.providerCallId,
+      occurredAt: output.deliveredAt.toISOString(),
+      payload: {
+        stageId: input.funnelContext.currentStageId,
+        welcomeAudioRef: output.welcomeAudioRef,
+      },
     });
 
     return output;

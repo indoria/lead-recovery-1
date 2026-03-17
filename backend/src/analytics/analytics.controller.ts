@@ -1,5 +1,6 @@
 import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
 import { AggregateStore } from './aggregate-store';
+import { CallEventStoreService, CallEventCategory, CallEventDirection } from './call-event-store.service';
 import { AnalyticsQuery } from './analytics.types';
 import { InMemoryAnalyticsStore } from './in-memory-analytics-store';
 import { TimeSeriesStore } from './time-series-store';
@@ -10,7 +11,54 @@ export class AnalyticsController {
     private readonly aggregateStore: AggregateStore,
     private readonly timeSeriesStore: TimeSeriesStore,
     private readonly analyticsStore: InMemoryAnalyticsStore,
+    private readonly callEventStore: CallEventStoreService,
   ) {}
+
+  @Get('logs')
+  getLogs(
+    @Query('limit') limit?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('category') category?: CallEventCategory,
+    @Query('direction') direction?: CallEventDirection,
+    @Query('phase') phase?: string,
+    @Query('provider') provider?: string,
+    @Query('eventName') eventName?: string,
+    @Query('requestId') requestId?: string,
+    @Query('callSessionId') callSessionId?: string,
+    @Query('providerCallId') providerCallId?: string,
+    @Query('module') module?: string,
+    @Query('level') level?: string,
+    @Query('search') search?: string,
+  ) {
+    const resolvedLimit = limit ? Number(limit) : 150;
+    if (!Number.isInteger(resolvedLimit) || resolvedLimit < 1 || resolvedLimit > 1000) {
+      throw new BadRequestException('limit must be an integer between 1 and 1000');
+    }
+
+    this.validateOptionalDate(from, 'from');
+    this.validateOptionalDate(to, 'to');
+
+    return {
+      items: this.callEventStore.listEvents({
+        limit: resolvedLimit,
+        from,
+        to,
+        category,
+        direction,
+        phase,
+        provider,
+        eventName,
+        requestId,
+        callSessionId,
+        providerCallId,
+        module,
+        level,
+        search,
+      }),
+      serverTime: new Date().toISOString(),
+    };
+  }
 
   @Get('summary')
   getSummary() {
@@ -390,6 +438,17 @@ export class AnalyticsController {
     }
 
     return { from: parsedFrom, to: parsedTo };
+  }
+
+  private validateOptionalDate(value: string | undefined, label: 'from' | 'to'): void {
+    if (!value) {
+      return;
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new BadRequestException(`${label} must be a valid ISO date value`);
+    }
   }
 
   private inRange(date: Date | undefined, from: Date, to: Date): boolean {

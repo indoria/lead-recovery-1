@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
+import { CallEventStoreService } from '../../analytics/call-event-store.service';
 import { AppConfigService } from '../config/app-config.service';
-import { Logger } from './logger.interface';
+import { Logger, LoggerWriteOptions } from './logger.interface';
 import { CorrelationIdService } from './correlation-id.service';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
@@ -19,19 +20,41 @@ export class AppLoggerService {
   constructor(
     private readonly configService: AppConfigService,
     private readonly correlationIdService: CorrelationIdService,
+    @Optional() private readonly callEventStore?: CallEventStoreService,
   ) {}
 
   createLogger(moduleName: string): Logger {
     return {
-      debug: (message, metadata) => this.write('debug', moduleName, message, metadata),
-      info: (message, metadata) => this.write('info', moduleName, message, metadata),
-      warn: (message, metadata) => this.write('warn', moduleName, message, metadata),
-      error: (message, metadata) => this.write('error', moduleName, message, metadata),
-      fatal: (message, metadata) => this.write('fatal', moduleName, message, metadata),
+      debug: (message, metadata, options) => this.write('debug', moduleName, message, metadata, options),
+      info: (message, metadata, options) => this.write('info', moduleName, message, metadata, options),
+      warn: (message, metadata, options) => this.write('warn', moduleName, message, metadata, options),
+      error: (message, metadata, options) => this.write('error', moduleName, message, metadata, options),
+      fatal: (message, metadata, options) => this.write('fatal', moduleName, message, metadata, options),
     };
   }
 
-  private write(level: LogLevel, moduleName: string, message: string, metadata?: Record<string, unknown>): void {
+  private write(
+    level: LogLevel,
+    moduleName: string,
+    message: string,
+    metadata?: Record<string, unknown>,
+    options?: LoggerWriteOptions,
+  ): void {
+    const config = this.configService.getConfig().logging;
+    const configuredLevel = config.level ?? 'info';
+    if (!this.shouldWriteForLevel(level, configuredLevel)) {
+      return;
+    }
+
+    const sinks = {
+      console: options?.sinks?.console ?? config.sinks?.console ?? true,
+      database: options?.sinks?.database ?? config.sinks?.database ?? false,
+    };
+
+    if (!sinks.console && !sinks.database) {
+      return;
+    }
+
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level,
@@ -41,7 +64,29 @@ export class AppLoggerService {
       metadata: metadata === undefined ? undefined : this.maskSensitiveFields(metadata),
     };
 
-    const serialized = this.configService.getConfig().logging.format === 'pretty'
+    if (sinks.database && this.callEventStore) {
+      this.callEventStore.recordEvent({
+        eventName: 'app.log',
+        category: 'workflow',
+        direction: 'internal',
+        phase: level,
+        correlationId: entry.correlationId,
+        occurredAt: entry.timestamp,
+        payload: {
+          module: entry.module,
+          level: entry.level,
+          message: entry.message,
+          metadata: entry.metadata,
+        },
+      });
+    }
+
+    if (!sinks.console) {
+      return;
+    }
+
+    const format = options?.format ?? config.format ?? 'json';
+    const serialized = format === 'pretty'
       ? JSON.stringify(entry, null, 2)
       : JSON.stringify(entry);
 
@@ -51,6 +96,11 @@ export class AppLoggerService {
     }
 
     console.log(serialized);
+  }
+
+  private shouldWriteForLevel(level: LogLevel, configuredLevel: LogLevel): boolean {
+    const order: LogLevel[] = ['debug', 'info', 'warn', 'error', 'fatal'];
+    return order.indexOf(level) >= order.indexOf(configuredLevel);
   }
 
   private maskSensitiveFields(value: Record<string, unknown>): Record<string, unknown>;

@@ -1,19 +1,28 @@
 [
   {
     "id": "cust_001",
-    "name": "Riya Sharma",
-    "phone": "+919900000001",
-    "email": "riya.sharma@example.com",
+    "name": "Bhagwati Prasad",
+    "phone": "+918368532373",
+    "email": "bhagwati@plutos.one",
     "language": "en-IN",
     "createdAt": "2026-03-10T10:00:00.000Z",
     "updatedAt": "2026-03-10T10:00:00.000Z"
   },
   {
     "id": "cust_002",
-    "name": "Arjun Verma",
-    "phone": "+919900000002",
-    "email": "arjun.verma@example.com",
+    "name": "Rajjat Gulati",
+    "phone": "+9199106",
+    "email": "rajjat@plutos.one",
     "language": "hi-IN",
+    "createdAt": "2026-03-10T10:00:00.000Z",
+    "updatedAt": "2026-03-10T10:00:00.000Z"
+  },
+  {
+    "id": "cust_003",
+    "name": "Satish",
+    "phone": "+919508741536",
+    "email": "satish@gmail.com",
+    "language": "en-IN",
     "createdAt": "2026-03-10T10:00:00.000Z",
     "updatedAt": "2026-03-10T10:00:00.000Z"
   }

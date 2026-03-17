@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { OutboundApiTracerService } from '../../analytics/outbound-api-tracer.service';
 import { AppConfigService } from '../../common/config/app-config.service';
 import { MockSTTAdapter } from './mock-stt-adapter';
 import { STTAdapter, STTRequest, STTResponse } from './stt-adapter.interface';
@@ -14,6 +15,7 @@ export class SarvamSTTAdapter implements STTAdapter {
   constructor(
     private readonly configService: AppConfigService,
     private readonly fallbackAdapter: MockSTTAdapter,
+    private readonly apiTracer: OutboundApiTracerService,
   ) {}
 
   async transcribe(req: STTRequest): Promise<STTResponse> {
@@ -32,14 +34,26 @@ export class SarvamSTTAdapter implements STTAdapter {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), config.timeoutMs);
       try {
-        return await fetch(`${config.baseUrl}/asr`, {
-          method: 'POST',
-          headers: {
-            'api-subscription-key': apiKey,
+        return await this.apiTracer.fetch(
+          `${config.baseUrl}/asr`,
+          {
+            method: 'POST',
+            headers: {
+              'api-subscription-key': apiKey,
+            },
+            body,
+            signal: controller.signal,
           },
-          body,
-          signal: controller.signal,
-        });
+          {
+            provider: 'sarvam',
+            operation: 'transcribe',
+            metadata: {
+              audioBytes: req.audioBuffer.byteLength,
+              encoding: req.encoding,
+              language: req.language,
+            },
+          },
+        );
       } finally {
         clearTimeout(timeout);
       }

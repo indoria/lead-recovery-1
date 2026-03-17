@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { OutboundApiTracerService } from '../../analytics/outbound-api-tracer.service';
 import { AppConfigService } from '../../common/config/app-config.service';
 import { AppLoggerService } from '../../common/logger/app-logger.service';
 import { MockLLMAdapter } from './mock-llm-adapter';
@@ -24,6 +25,7 @@ export class GeminiLLMAdapter implements LLMAdapter {
   constructor(
     private readonly configService: AppConfigService,
     private readonly fallbackAdapter: MockLLMAdapter,
+    private readonly apiTracer: OutboundApiTracerService,
     loggerFactory: AppLoggerService,
   ) {
     this.logger = loggerFactory.createLogger('gemini-llm-adapter');
@@ -45,7 +47,7 @@ export class GeminiLLMAdapter implements LLMAdapter {
     const timeout = setTimeout(() => controller.abort(), config.gemini.timeoutMs);
 
     try {
-      const response = await fetch(
+      const response = await this.apiTracer.fetch(
         `${config.gemini.baseUrl}/v1beta/models/${config.gemini.model}:generateContent?key=${apiKey}`,
         {
           method: 'POST',
@@ -64,6 +66,16 @@ export class GeminiLLMAdapter implements LLMAdapter {
             },
           }),
           signal: controller.signal,
+        },
+        {
+          provider: 'gemini',
+          operation: 'generate-content',
+          metadata: {
+            maxTokens: req.maxTokens,
+            messageCount: req.messages.length,
+            model: config.gemini.model,
+            temperature: req.temperature,
+          },
         },
       );
 

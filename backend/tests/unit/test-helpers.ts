@@ -56,6 +56,10 @@ export const testConfig: ResolvedConfig = {
     level: 'debug',
     format: 'json',
     correlationIdHeader: 'X-Correlation-ID',
+    sinks: {
+      console: true,
+      database: false,
+    },
   },
   llm: {
     provider: 'mock',
