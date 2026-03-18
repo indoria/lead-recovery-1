@@ -15,6 +15,15 @@ export interface IntegrationTestResult {
   message: string;
 }
 
+const DEFAULT_ENV_VARS = {
+  sarvamApiKey: 'SARVAM_API_KEY',
+  elevenLabsApiKey: 'ELEVEN_LABS_API_KEY',
+  twilioAccountSid: 'TWILIO_ACCOUNT_SID',
+  twilioAuthToken: 'TWILIO_AUTH_TOKEN',
+  exotelAccountSid: 'EXOTEL_ACCOUNT_SID',
+  exotelAuthToken: 'EXOTEL_AUTH_TOKEN',
+} as const;
+
 @Controller('integrations')
 export class IntegrationsController {
   constructor(private readonly configService: AppConfigService) {}
@@ -83,12 +92,12 @@ export class IntegrationsController {
 
   private testSarvam(): IntegrationTestResult {
     const cfg = this.configService.getConfig().stt.sarvam;
-    const key = process.env[cfg.apiKeyEnvVar];
+    const key = this.resolveSecret(cfg.apiKeyEnvVar, DEFAULT_ENV_VARS.sarvamApiKey);
     if (!key) {
       return {
         ok: false,
         reason: 'not_configured',
-        message: `Not configured — set the ${cfg.apiKeyEnvVar} environment variable`,
+        message: `Not configured — set ${DEFAULT_ENV_VARS.sarvamApiKey}`,
       };
     }
     return { ok: true, message: 'API key is configured' };
@@ -96,12 +105,12 @@ export class IntegrationsController {
 
   private testElevenLabs(): IntegrationTestResult {
     const cfg = this.configService.getConfig().tts.elevenLabs;
-    const key = process.env[cfg.apiKeyEnvVar];
+    const key = this.resolveSecret(cfg.apiKeyEnvVar, DEFAULT_ENV_VARS.elevenLabsApiKey);
     if (!key) {
       return {
         ok: false,
         reason: 'not_configured',
-        message: `Not configured — set the ${cfg.apiKeyEnvVar} environment variable`,
+        message: `Not configured — set ${DEFAULT_ENV_VARS.elevenLabsApiKey}`,
       };
     }
     return { ok: true, message: 'API key is configured' };
@@ -109,10 +118,13 @@ export class IntegrationsController {
 
   private testTwilio(): IntegrationTestResult {
     const cfg = this.configService.getConfig().telephony.twilio;
-    const sid = process.env[cfg.accountSidEnvVar];
-    const token = process.env[cfg.authTokenEnvVar];
+    const sid = this.resolveSecret(cfg.accountSidEnvVar, DEFAULT_ENV_VARS.twilioAccountSid);
+    const token = this.resolveSecret(cfg.authTokenEnvVar, DEFAULT_ENV_VARS.twilioAuthToken);
     if (!sid || !token) {
-      const missing = [!sid && cfg.accountSidEnvVar, !token && cfg.authTokenEnvVar].filter(Boolean).join(', ');
+      const missing = [
+        !sid && DEFAULT_ENV_VARS.twilioAccountSid,
+        !token && DEFAULT_ENV_VARS.twilioAuthToken,
+      ].filter(Boolean).join(', ');
       return {
         ok: false,
         reason: 'not_configured',
@@ -124,10 +136,13 @@ export class IntegrationsController {
 
   private testExotel(): IntegrationTestResult {
     const cfg = this.configService.getConfig().telephony.exotel;
-    const sid = process.env[cfg.accountSidEnvVar];
-    const token = process.env[cfg.authTokenEnvVar];
+    const sid = this.resolveSecret(cfg.accountSidEnvVar, DEFAULT_ENV_VARS.exotelAccountSid);
+    const token = this.resolveSecret(cfg.authTokenEnvVar, DEFAULT_ENV_VARS.exotelAuthToken);
     if (!sid || !token) {
-      const missing = [!sid && cfg.accountSidEnvVar, !token && cfg.authTokenEnvVar].filter(Boolean).join(', ');
+      const missing = [
+        !sid && DEFAULT_ENV_VARS.exotelAccountSid,
+        !token && DEFAULT_ENV_VARS.exotelAuthToken,
+      ].filter(Boolean).join(', ');
       return {
         ok: false,
         reason: 'not_configured',
@@ -147,5 +162,21 @@ export class IntegrationsController {
       };
     }
     return { ok: true, message: `Using ${config.adapter} CRM adapter` };
+  }
+
+  private resolveSecret(configEntry: string | undefined, fallbackEnvName: string): string | undefined {
+    if (typeof configEntry === 'string' && configEntry.length > 0) {
+      if (this.looksLikeEnvVarName(configEntry)) {
+        return process.env[configEntry] ?? process.env[fallbackEnvName];
+      }
+      // Backward compatibility: some environments stored raw credentials in config.
+      return configEntry;
+    }
+
+    return process.env[fallbackEnvName];
+  }
+
+  private looksLikeEnvVarName(value: string): boolean {
+    return /^[A-Z_][A-Z0-9_]*$/.test(value);
   }
 }

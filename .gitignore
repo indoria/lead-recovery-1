@@ -3,3 +3,4 @@ dist/
 *.swp
 backend/data/*.sqlite
 backend/data/*.sqlite-*
+backend/.env
