@@ -1,3 +1,5 @@
 node_modules/
 dist/
 *.swp
+backend/data/*.sqlite
+backend/data/*.sqlite-*
