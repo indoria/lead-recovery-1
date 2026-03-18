@@ -29,9 +29,9 @@ tts:
     defaultVoiceId: default
 
 telephony:
-  provider: mock
+  provider: twilio # or exotel, or mock
   playsWelcomeOnConnect: false
-  fromNumber: '+910000000000'
+  fromNumber: '7712532431'
   twilio:
     accountSidEnvVar: TWILIO_ACCOUNT_SID
     authTokenEnvVar: TWILIO_AUTH_TOKEN
