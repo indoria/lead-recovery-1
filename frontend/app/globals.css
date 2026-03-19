@@ -388,7 +388,6 @@ a {
 
 .activity-rail-group {
   flex-direction: column;
-  gap: 2px;
 }
 
 .activity-rail-button {
@@ -402,12 +401,16 @@ a {
   font-weight: var(--font-semibold);
   letter-spacing: 0.04em;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .activity-rail-button:hover,
 .activity-rail-button.is-active {
   color: var(--text-strong);
-  background: var(--activity-hover-bg);
+  background-color: var(--surface);
+  background: linear-gradient(90deg, var(--activity-hover-bg), var(--surface));
 }
 
 .activity-rail-button.is-active::before {
@@ -432,7 +435,7 @@ a {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-4) var(--space-4) var(--space-3);
+  padding: var(--space-3);
   border-bottom: 1px solid var(--border);
 }
 

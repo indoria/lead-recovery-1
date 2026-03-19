@@ -13,9 +13,9 @@ Related plan: [frontend/nextjs-migration.md](frontend/nextjs-migration.md)
 ## Status Legend
 ## Overall Progress
 - Program Status: In Progress
-- Current Phase: Phase 4
-- Completion: 50%
-- Last Updated: 2026-03-18
+- Current Phase: Phase 5 (Phase 4 Complete)
+- Completion: 58%
+- Last Updated: 2026-03-19
 
 ## Status Legend
 - `Not Started`: no implementation work started.
@@ -80,11 +80,6 @@ Objective: migrate customers route with parity.
 
 | ID | Task | Owner | Status | Target Date | Notes |
 |---|---|---|---|---|---|
-| P3-1 | Create `app/customers/page` |  | Not Started |  |  |
-| P3-2 | Build `features/customers` module structure |  | Not Started |  |  |
-| P3-3 | Wire customers data APIs via shared client |  | Not Started |  |  |
-| P3-4 | Implement search/filter/table/actions parity |  | Not Started |  |  |
-| P3-5 | Implement lead upload parity |  | Not Started |  |  |
 | P3-1 | Create `app/customers/page` |  | Done | 2026-03-18 | Full customers page with state mgmt, filters, table |
 | P3-2 | Build `features/customers` module structure |  | Done | 2026-03-18 | types.ts, api.ts, utils.ts, components, index.ts |
 | P3-3 | Wire customers data APIs via shared client |  | Done | 2026-03-18 | getCustomers, uploadLeads, initiateCall via apiClient |
@@ -118,17 +113,20 @@ Objective: migrate high-interaction views including live stream behavior.
 
 | ID | Task | Owner | Status | Target Date | Notes |
 |---|---|---|---|---|---|
-| P4-1 | Migrate Integrations route and test workflow |  | Not Started |  |  |
-| P4-2 | Migrate Logs route with filter controls |  | Not Started |  |  |
-| P4-3 | Implement SSE subscription and reconnect flow |  | Not Started |  |  |
-| P4-4 | Keep polling fallback for stream failures |  | Not Started |  |  |
-| P4-5 | Add tests for stream and filter behavior |  | Not Started |  |  |
-| P4-6 | Emit stream lifecycle telemetry/logs via `/frontend/instrumentation.ts` |  | Not Started |  | connect, disconnect, retry, fallback |
+| P4-1 | Migrate Integrations route and test workflow |  | Done | 2026-03-19 | Integrations page with test connection workflow implemented ✅ |
+| P4-2 | Migrate Logs route with filter controls |  | Done | 2026-03-19 | Logs page with level/source/timeRange filters ✅ |
+| P4-3 | Implement SSE subscription and reconnect flow |  | Done | 2026-03-19 | SSE with 3-retry limit and exponential backoff ✅ |
+| P4-4 | Keep polling fallback for stream failures |  | Done | 2026-03-19 | Polling fallback at 5s interval when SSE fails ✅ |
+| P4-5 | Add tests for stream and filter behavior |  | Done | 2026-03-19 | Filter state management and stream lifecycle tested ✅ |
+| P4-6 | Emit stream lifecycle telemetry/logs via `/frontend/instrumentation.ts` |  | Done | 2026-03-19 | All stream events logged: connect, disconnect, retry, fallback ✅ |
 
 Exit Criteria:
-- Integrations and Logs parity confirmed.
-- SSE + fallback stable under failure/reconnect.
-- Stream telemetry/logging is visible from centralized instrumentation.
+- ✅ Integrations and Logs parity confirmed.
+- ✅ SSE + fallback stable under failure/reconnect.
+- ✅ Stream telemetry/logging visible through centralized instrumentation.
+- ✅ Integration test workflow with status polling implemented.
+- ✅ Logs page with live stream and export functionality.
+- ✅ All telemetry events emitted for monitoring stream health.
 
 ### Phase 5: Remaining Routes and Navigation Completion
 Objective: complete migration of all remaining routes.
@@ -202,11 +200,8 @@ Exit Criteria:
 | 2026-03-18 | CSS custom properties + semantic classes for component styling | Semantic class names (`.btn`, `.field`, `.card`, etc.) with Tailwind tokens for consistency and maintainability |  |
 | 2026-03-18 | Use cookies (not sessionStorage) for auth tokens | Enables middleware access to session for role-based route guards |  |
 | 2026-03-18 | Separate LoginForm into dedicated client component | Allows Suspense wrapping on page.tsx due to useSearchParams() usage |  |
-
-## Weekly Review Template
 | 2026-03-18 | Implement customers as vertical slice with feature module pattern | groups related code (types, api, utils, components) for scalability to other features |  |
-
-## Weekly Review Template
+| 2026-03-19 | Complete Phase 4: Logs + Integrations with SSE/polling | Both pages implement stream handling with fallback, comprehensive telemetry, and test workflow |  |
 - Week:
 - Completed:
 - In Progress:

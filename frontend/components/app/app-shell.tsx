@@ -5,6 +5,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthContext } from "@/lib/auth/context";
 
+import {
+  Gauge, Users, ShoppingBasket, Funnel, Phone, Headset, ChartNoAxesCombined, Settings, CircleUser,
+  PhoneIncoming, BarChart3, Megaphone, Bot, Zap, ArrowDown, ArrowUp, Router, RefreshCw, Mic, CheckCircle2, BookOpen
+} from "lucide-react";
+import {PanelLeftClose, PanelLeftOpen} from "lucide-react"
+
 const navItems = [
   { href: "/", label: "Dashboard" },
   { href: "/customers", label: "Customers" },
@@ -17,14 +23,112 @@ const navItems = [
 ];
 
 const activityItems = [
-  { key: "explorer", label: "EX" },
-  { key: "search", label: "SR" },
-  { key: "source", label: "SC" },
-  { key: "run", label: "RN" },
-  { key: "extensions", label: "XT" },
+  { key: "dashboard", label: "Dashboard", icon: <Gauge size={24} /> },
+  { key: "crm", label: "CRM", icon: <Users size={24} /> },
+  { key: "products", label: "Products", icon: <ShoppingBasket size={24} /> },
+  { key: "funnels", label: "Sales Funnel", icon: <Funnel size={24} /> },
+  { key: "calls", label: "Calls", icon: <Phone size={24} /> },
+  { key: "agents", label: "Agents", icon: <Headset size={24} /> },
+  { key: "analytics", label: "Analytics", icon: <ChartNoAxesCombined size={24} /> },
+];
+
+const activityItemsBottom = [
+  { key: "settings", label: "Settings", icon: <Settings size={24} /> },
+  { key: "account", label: "Account", icon: <CircleUser size={24} /> },
 ];
 
 const panelTabs = ["Problems", "Output", "Telemetry", "Terminal"];
+
+const activityRouteForKey: Record<string, string> = {
+  dashboard: "/",
+  crm: "/customers",
+  products: "/products",
+  funnels: "/funnels",
+  calls: "/calls/active",
+  agents: "/agents",
+  analytics: "/analytics",
+  settings: "/settings/integrations",
+  account: "/account",
+};
+
+const activitySubmenu: Record<string, { title: string; icon?: React.ReactNode; items: Array<{ label: string; icon?: React.ReactNode; href?: string }> }[]> = {
+  dashboard: [
+    {
+      title: "Enterprise Telephony & Contact Center",
+      items: [
+        { label: "Live Call Queue", icon: <PhoneIncoming size={16} /> },
+        { label: "Call History & Analytics", icon: <BarChart3 size={16} /> },
+        { label: "Active Campaigns", icon: <Megaphone size={16} /> },
+      ],
+    },
+    {
+      title: "Calling Agents",
+      items: [
+        { label: "Human Agents", icon: <Users size={16} />, href: "/agents?type=human" },
+        { label: "AI Agents", icon: <Bot size={16} />, href: "/agents?type=ai" },
+        { label: "Agent Performance", icon: <Zap size={16} />, href: "/analytics?view=agents" },
+      ],
+    },
+    {
+      title: "Customer Contact Routes",
+      items: [
+        { label: "Inbound Routing", icon: <ArrowDown size={16} /> },
+        { label: "Outbound Campaigns", icon: <ArrowUp size={16} /> },
+        { label: "IVR Configuration", icon: <Router size={16} /> },
+        { label: "Call Transfers", icon: <RefreshCw size={16} /> },
+      ],
+    },
+    {
+      title: "Quality & Compliance",
+      items: [
+        { label: "Call Recordings", icon: <Mic size={16} /> },
+        { label: "Compliance Audits", icon: <CheckCircle2 size={16} /> },
+        { label: "Agent Training", icon: <BookOpen size={16} /> },
+      ],
+    },
+  ],
+  crm: [
+    {
+      title: "Customer Management",
+      items: [
+        { label: "All Customers", href: "/customers" },
+        { label: "Segments", href: "/customers?view=segments" },
+        { label: "Contact History", href: "/customers?view=history" },
+      ],
+    },
+  ],
+  calls: [
+    {
+      title: "Call Management",
+      items: [
+        { label: "Active Calls", href: "/calls/active" },
+        { label: "Call Queue", href: "/calls/queue" },
+        { label: "Call History", href: "/calls/history" },
+      ],
+    },
+  ],
+  agents: [
+    {
+      title: "Agent Management",
+      items: [
+        { label: "All Agents", href: "/agents" },
+        { label: "Human Agents", href: "/agents?type=human" },
+        { label: "AI Agents", href: "/agents?type=ai" },
+      ],
+    },
+  ],
+  analytics: [
+    {
+      title: "Analytics & Reports",
+      items: [
+        { label: "Dashboard Metrics", href: "/analytics" },
+        { label: "Call Analytics", href: "/analytics?view=calls" },
+        { label: "Agent Performance", href: "/analytics?view=agents" },
+        { label: "Funnel Analytics", href: "/analytics?view=funnels" },
+      ],
+    },
+  ],
+};
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { session, logout } = useAuthContext();
@@ -48,9 +152,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     router.replace("/login");
   }
 
-  const openTabs = navItems.filter(
-    (item) => item.href === pathname || item.href === "/" || item.href === "/customers"
-  );
+  // Determine active activity key based on pathname
+  const getActiveActivityKey = () => {
+    for (const [key, route] of Object.entries(activityRouteForKey)) {
+      if (pathname === route) return key;
+      if (pathname.startsWith(route) && route !== "/") return key;
+    }
+    return "dashboard"; // default
+  };
+
+  const activeActivityKey = getActiveActivityKey();
+
+  // Build open tabs based on current active route
+  const currentNavItem = navItems.find((item) => item.href === pathname || pathname.startsWith(item.href));
+  const openTabs = currentNavItem ? [currentNavItem] : [navItems[0]];
 
   return (
     <div className="app-shell workbench-shell">
@@ -61,7 +176,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span />
             <span />
           </div>
-          <p className="titlebar-product">Lead Recovery Workspace</p>
+          <p className="titlebar-product">Lead Recovery</p>
         </div>
         <div className="command-center" role="search">
           <span className="command-center-kbd">CTRL</span>
@@ -70,6 +185,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span className="command-center-text">Search commands, routes, and actions</span>
         </div>
         <div className="titlebar-actions">
+          <p className="app-user-chip">
+            {session?.user.email ?? "Guest"}
+          </p>
+          <button type="button" className="btn btn-secondary btn-sm shell-logout" onClick={handleLogout}>
+            Sign out
+          </button>
           <button
             type="button"
             className="btn btn-ghost btn-sm aux-toggle-button"
@@ -77,13 +198,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             aria-expanded={isAuxOpen}
             aria-controls="right-auxiliary-pane"
           >
-            {isAuxOpen ? "Hide Copilot" : "Show Copilot"}
-          </button>
-          <p className="app-user-chip">
-            {session?.user.email ?? "Guest"} · {session?.role ?? "unknown"}
-          </p>
-          <button type="button" className="btn btn-secondary btn-sm shell-logout" onClick={handleLogout}>
-            Sign out
+            {isAuxOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
           </button>
         </div>
       </header>
@@ -91,21 +206,38 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className={`workbench-main split-view-container${isAuxOpen ? " aux-open" : " aux-collapsed"}`}>
         <aside className="activity-rail split-view split-view-1" aria-label="Primary activity">
           <div className="activity-rail-group">
-            {activityItems.map((item, index) => (
+            {activityItems.map((item) => (
               <button
                 key={item.key}
                 type="button"
-                className={`activity-rail-button${index === 0 ? " is-active" : ""}`}
+                className={`activity-rail-button${activeActivityKey === item.key ? " is-active" : ""}`}
                 aria-label={item.key}
+                title={item.key}
+                onClick={() => {
+                  const route = activityRouteForKey[item.key];
+                  if (route) router.push(route);
+                }}
               >
-                {item.label}
+                {item.icon ? item.icon : item.label}
               </button>
             ))}
           </div>
           <div className="activity-rail-group activity-rail-group--bottom">
-            <button type="button" className="activity-rail-button" aria-label="Account">
-              AC
-            </button>
+            {activityItemsBottom.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={`activity-rail-button${activeActivityKey === item.key ? " is-active" : ""}`}
+                aria-label={item.key}
+                title={item.key}
+                onClick={() => {
+                  const route = activityRouteForKey[item.key];
+                  if (route) router.push(route);
+                }}
+              >
+                {item.icon ? item.icon : item.label}
+              </button>
+            ))}
           </div>
         </aside>
 
@@ -114,35 +246,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <p className="explorer-label">Explorer</p>
             <span className="explorer-meta">lead-recovery-1</span>
           </div>
-          <div className="explorer-section">
-            <p className="explorer-section-title">Open Editors</p>
-            <ul className="explorer-list explorer-list--compact">
-              {openTabs.map((item) => (
-                <li key={item.href}>
-                  <Link href={item.href} className={`explorer-link${pathname === item.href ? " is-active" : ""}`}>
-                    {item.label}.tsx
-                  </Link>
-                </li>
+          {activitySubmenu[activeActivityKey] && (
+            <>
+              {activitySubmenu[activeActivityKey]!.map((section, index) => (
+                <div key={index} className="explorer-section">
+                  <p className="explorer-section-title">{section.title}</p>
+                  <ul className="explorer-list">
+                    {section.items.map((item, itemIndex) => (
+                      <li key={itemIndex}>
+                        {item.href ? (
+                          <Link
+                            href={item.href}
+                            className={`explorer-link${pathname === item.href ? " is-active" : ""}`}
+                          >
+                            <span className="explorer-link-icon">{item.icon}</span>
+                            <span>{item.label}</span>
+                          </Link>
+                        ) : (
+                          <span className="explorer-link is-muted">
+                            <span className="explorer-link-icon">{item.icon}</span>
+                            <span>{item.label}</span>
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
-          </div>
-          <div className="explorer-section">
-            <p className="explorer-section-title">Workspace</p>
-            <ul className="explorer-list">
-              <li className="explorer-group">app</li>
-              {navItems.map((item) => (
-                <li key={item.href}>
-                  <Link href={item.href} className={`explorer-link${pathname === item.href ? " is-active" : ""}`}>
-                    {item.label.toLowerCase().replace(/\s+/g, "-")}.tsx
-                  </Link>
-                </li>
-              ))}
-              <li className="explorer-group">features</li>
-              <li><span className="explorer-link is-muted">customers/</span></li>
-              <li><span className="explorer-link is-muted">integrations/</span></li>
-              <li><span className="explorer-link is-muted">logs/</span></li>
-            </ul>
-          </div>
+            </>
+          )}
         </aside>
 
         <section className="editor-stack split-view split-view-3">

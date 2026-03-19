@@ -3,10 +3,12 @@ type TelemetryLevel = "debug" | "info" | "warn" | "error";
 export type TelemetryEvent = {
   source: string;
   message: string;
+  type?: string;
   level?: TelemetryLevel;
   route?: string;
   details?: Record<string, unknown>;
   timestamp?: string;
+  [key: string]: unknown;
 };
 
 const TELEMETRY_ENDPOINT =
