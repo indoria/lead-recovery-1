@@ -9,7 +9,7 @@ import {
   Gauge, Users, ShoppingBasket, Funnel, Phone, Headset, ChartNoAxesCombined, Settings, CircleUser,
   PhoneIncoming, BarChart3, Megaphone, Bot, Zap, ArrowDown, ArrowUp, Router, RefreshCw, Mic, CheckCircle2, BookOpen
 } from "lucide-react";
-import {PanelLeftClose, PanelLeftOpen} from "lucide-react"
+import {LogOut, ArrowRightToLine, ArrowLeftToLine} from "lucide-react"
 
 const navItems = [
   { href: "/", label: "Dashboard" },
@@ -54,7 +54,7 @@ const activityRouteForKey: Record<string, string> = {
 const activitySubmenu: Record<string, { title: string; icon?: React.ReactNode; items: Array<{ label: string; icon?: React.ReactNode; href?: string }> }[]> = {
   dashboard: [
     {
-      title: "Enterprise Telephony & Contact Center",
+      title: "Telephony & Contact Center",
       items: [
         { label: "Live Call Queue", icon: <PhoneIncoming size={16} /> },
         { label: "Call History & Analytics", icon: <BarChart3 size={16} /> },
@@ -188,17 +188,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <p className="app-user-chip">
             {session?.user.email ?? "Guest"}
           </p>
-          <button type="button" className="btn btn-secondary btn-sm shell-logout" onClick={handleLogout}>
-            Sign out
+          <button type="button" className="btn-icon shell-logout" onClick={handleLogout}>
+            <LogOut size={24} />
           </button>
           <button
             type="button"
-            className="btn btn-ghost btn-sm aux-toggle-button"
+            className="btn-icon aux-toggle-button"
             onClick={() => setIsAuxOpen((prev) => !prev)}
             aria-expanded={isAuxOpen}
             aria-controls="right-auxiliary-pane"
           >
-            {isAuxOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
+            {isAuxOpen ? <ArrowRightToLine /> : <ArrowLeftToLine />}
           </button>
         </div>
       </header>
@@ -340,11 +340,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <p className="right-aux-title">Copilot Chat</p>
                 <button
                   type="button"
-                  className="btn btn-ghost btn-sm"
+                  className="btn-icon"
                   onClick={() => setIsAuxOpen(false)}
                   aria-label="Collapse auxiliary panel"
                 >
-                  Collapse
+                  <ArrowRightToLine size={16} />
                 </button>
               </div>
               <div className="right-aux-body">

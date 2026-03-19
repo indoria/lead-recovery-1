@@ -265,7 +265,7 @@ a {
   gap: var(--space-3);
   padding: 0 var(--space-3);
   background: var(--titlebar-bg);
-  border-bottom: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--border);
 }
 
 .titlebar-brand,
@@ -349,10 +349,6 @@ a {
 .titlebar-actions {
   justify-content: flex-end;
   gap: var(--space-3);
-}
-
-.shell-logout {
-  min-width: 84px;
 }
 
 .workbench-main {
@@ -798,10 +794,6 @@ a {
   accent-color: var(--brand);
 }
 
-.aux-toggle-button {
-  min-width: 110px;
-}
-
 .right-auxiliary-pane {
   background: var(--aux-bg);
   border-left: 1px solid var(--aux-border);
@@ -1046,6 +1038,33 @@ a {
 .btn-lg {
   padding: var(--space-3) var(--space-6);
   font-size: var(--text-base);
+}
+
+/* Icon Button */
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: all var(--transition);
+}
+
+.btn-icon:hover:not(:disabled) {
+  background: var(--surface-muted);
+  color: var(--text-strong);
+}
+
+.btn-icon:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
 }
 
 .btn-full {

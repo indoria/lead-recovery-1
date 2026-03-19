@@ -36,12 +36,16 @@ export async function getLogs(filters: LogFilter): Promise<LogEntry[]> {
     const url = buildLogsUrl(filters);
     const response = await apiClient.get<LogsResponse>(url);
     logClientEvent({
+      source: "logs-api",
+      message: "Logs fetched successfully",
       type: "logs_fetched",
       count: response.items?.length || 0,
     });
     return response.items || [];
   } catch (err) {
     logClientEvent({
+      source: "logs-api",
+      message: "Failed to fetch logs",
       type: "logs_fetch_error",
       error: err instanceof Error ? err.message : "Unknown error",
     });
@@ -70,6 +74,8 @@ export function subscribeLogs(
   function attemptSSEConnection() {
     try {
       logClientEvent({
+        source: "logs-api",
+        message: "Attempting SSE connection",
         type: "logs_sse_connecting",
         retryCount,
       });
@@ -81,11 +87,15 @@ export function subscribeLogs(
           const data = JSON.parse((event as MessageEvent).data);
           onLog(data);
           logClientEvent({
+            source: "logs-api",
+            message: "SSE message received",
             type: "logs_sse_message",
             logId: data.id,
           });
         } catch (parseErr) {
           logClientEvent({
+            source: "logs-api",
+            message: "Failed to parse SSE message",
             type: "logs_sse_parse_error",
             error: parseErr instanceof Error ? parseErr.message : "Unknown",
           });
@@ -94,6 +104,8 @@ export function subscribeLogs(
 
       eventSource.addEventListener("error", () => {
         logClientEvent({
+          source: "logs-api",
+          message: "SSE connection error",
           type: "logs_sse_error",
           retryCount,
         });
@@ -106,6 +118,8 @@ export function subscribeLogs(
         retryCount++;
         if (retryCount >= maxRetries) {
           logClientEvent({
+            source: "logs-api",
+            message: "Falling back to polling",
             type: "logs_fallback_to_polling",
           });
           isUsingFallback = true;
@@ -119,11 +133,15 @@ export function subscribeLogs(
         retryCount = 0;
         onConnect();
         logClientEvent({
+          source: "logs-api",
+          message: "SSE connected successfully",
           type: "logs_sse_connected",
         });
       });
     } catch (err) {
       logClientEvent({
+        source: "logs-api",
+        message: "Failed to establish SSE connection",
         type: "logs_sse_connection_error",
         error: err instanceof Error ? err.message : "Unknown",
       });
@@ -158,6 +176,8 @@ export function subscribeLogs(
       } catch (err) {
         onError(err instanceof Error ? err.message : "Polling error");
         logClientEvent({
+          source: "logs-api",
+          message: "Polling error",
           type: "logs_polling_error",
           error: err instanceof Error ? err.message : "Unknown",
         });
@@ -176,6 +196,8 @@ export function subscribeLogs(
     }
     onDisconnect();
     logClientEvent({
+      source: "logs-api",
+      message: "Logs stream disconnected",
       type: "logs_stream_disconnected",
       usedFallback: isUsingFallback,
     });
@@ -204,6 +226,8 @@ export async function exportLogs(filters: LogFilter, format: "json" | "csv" = "j
     }
 
     logClientEvent({
+      source: "logs-api",
+      message: "Logs exported successfully",
       type: "logs_exported",
       format,
       count: logs.length,
@@ -212,6 +236,8 @@ export async function exportLogs(filters: LogFilter, format: "json" | "csv" = "j
     return new Blob([content], { type: format === "csv" ? "text/csv" : "application/json" });
   } catch (err) {
     logClientEvent({
+      source: "logs-api",
+      message: "Failed to export logs",
       type: "logs_export_error",
       error: err instanceof Error ? err.message : "Unknown error",
     });
