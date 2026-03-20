@@ -5,6 +5,8 @@ type RequestOptions = {
   body?: unknown;
   headers?: HeadersInit;
   signal?: AbortSignal;
+  cache?: RequestCache;
+  next?: { revalidate?: number };
 };
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -16,7 +18,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     },
     body: options.body ? JSON.stringify(options.body) : undefined,
     signal: options.signal,
-    cache: "no-store",
+    cache: options.cache ?? "no-store",
+    next: options.next ? { revalidate: options.next.revalidate } : undefined,
   });
 
   if (!response.ok) {
