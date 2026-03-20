@@ -1,7 +1,7 @@
 import type { InputHTMLAttributes } from "react";
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & {
-  label: string;
+  label?: string;
   id: string;
   error?: string;
   hint?: string;
@@ -14,14 +14,16 @@ export function Input({ label, id, error, hint, className = "", ...props }: Inpu
 
   return (
     <div className="field">
-      <label htmlFor={id} className="field-label">
-        {label}
-        {props.required && (
-          <span className="field-required" aria-hidden="true">
-            {" "}*
-          </span>
-        )}
-      </label>
+      {label ? (
+        <label htmlFor={id} className="field-label">
+          {label}
+          {props.required && (
+            <span className="field-required" aria-hidden="true">
+              {" "}*
+            </span>
+          )}
+        </label>
+      ) : null}
       <input
         {...props}
         id={id}

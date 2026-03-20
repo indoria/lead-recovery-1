@@ -1,7 +1,11 @@
+import dynamic from "next/dynamic";
 import { getAnalyticsSummaryCached } from "@/features/analytics/api";
 import type { AnalyticsSummary } from "@/features/analytics/types";
-import { Card } from "@/components/ui/card";
 import { ErrorDisplay } from "@/components/ui/error-display";
+
+const AnalyticsSummary = dynamic(() => import("@/components/analytics/AnalyticsSummary").then((mod) => mod.AnalyticsSummary), {
+  loading: () => <p>Loading analytics dashboard...</p>,
+});
 
 export const revalidate = 60;
 
@@ -28,29 +32,7 @@ export default async function AnalyticsPage() {
     <section>
       <h1>Analytics</h1>
       <p>High-level performance metrics for call recovery and funnel conversion.</p>
-
-      <div className="grid gap-4" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
-        <Card>
-          <h2>Total Calls</h2>
-          <p>{summary.totalCalls}</p>
-        </Card>
-        <Card>
-          <h2>Recovered</h2>
-          <p>{summary.recoveredCalls}</p>
-        </Card>
-        <Card>
-          <h2>Escalated</h2>
-          <p>{summary.escalatedCalls}</p>
-        </Card>
-        <Card>
-          <h2>Failed</h2>
-          <p>{summary.failedCalls}</p>
-        </Card>
-        <Card>
-          <h2>Avg Duration</h2>
-          <p>{summary.averageDurationSeconds.toFixed(1)}s</p>
-        </Card>
-      </div>
+      <AnalyticsSummary summary={summary} />
     </section>
   );
 }

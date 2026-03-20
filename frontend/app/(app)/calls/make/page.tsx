@@ -53,7 +53,7 @@ export default function MakeCallPage() {
           </Button>
         </form>
 
-        {status === "success" && <Empty message={message || "Call initiated successfully."} />}
+        {status === "success" && <Empty title={message || "Call initiated successfully."} />}
         {status === "error" && <ErrorDisplay message={message || "Unable to initiate call."} />}
       </Card>
     </section>

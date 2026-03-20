@@ -13,9 +13,9 @@ Related plan: [frontend/nextjs-migration.md](frontend/nextjs-migration.md)
 ## Status Legend
 ## Overall Progress
 - Program Status: In Progress
-- Current Phase: Phase 5 (Phase 4 Complete)
-- Completion: 58%
-- Last Updated: 2026-03-19
+- Current Phase: Phase 6 (Phase 5 Done)
+- Completion: 75%
+- Last Updated: 2026-03-20
 
 ## Status Legend
 - `Not Started`: no implementation work started.
@@ -133,12 +133,12 @@ Objective: complete migration of all remaining routes.
 
 | ID | Task | Owner | Status | Target Date | Notes |
 |---|---|---|---|---|---|
-| P5-1 | Migrate Calls route |  | Not Started |  |  |
-| P5-2 | Migrate Funnels route |  | Not Started |  |  |
-| P5-3 | Migrate Analytics route |  | Not Started |  |  |
-| P5-4 | Migrate Agents route |  | Not Started |  |  |
-| P5-5 | Migrate Settings route |  | Not Started |  |  |
-| P5-6 | Replace hash routing with App Router paths |  | Not Started |  |  |
+| P5-1 | Migrate Calls route | @bhagwati-plutos | Done | 2026-03-20 | Calls pages under app/(app)/calls are implemented |
+| P5-2 | Migrate Funnels route | @bhagwati-plutos | Done | 2026-03-20 | Funnels pages present under app/(app)/funnels |
+| P5-3 | Migrate Analytics route | @bhagwati-plutos | Done | 2026-03-20 | Analytics page exists, dynamic summary loaded |
+| P5-4 | Migrate Agents route | @bhagwati-plutos | Done | 2026-03-20 | Agents page exists under app/(app)/agents |
+| P5-5 | Migrate Settings route | @bhagwati-plutos | Done | 2026-03-20 | Settings section exists under app/(app)/settings |
+| P5-6 | Replace hash routing with App Router paths | @bhagwati-plutos | Done | 2026-03-20 | App Router path structure in place |
 
 Exit Criteria:
 - All user-facing routes available in Next.js.
@@ -149,11 +149,11 @@ Objective: optimize and harden after parity.
 
 | ID | Task | Owner | Status | Target Date | Notes |
 |---|---|---|---|---|---|
-| P6-1 | Evaluate server/client rendering boundaries |  | Not Started |  |  |
-| P6-2 | Add dynamic imports and bundle optimization |  | Not Started |  |  |
-| P6-3 | Add caching strategy for API-heavy routes |  | Not Started |  |  |
-| P6-4 | Run accessibility and regression full pass |  | Not Started |  |  |
-| P6-5 | Establish route-level performance budgets |  | Not Started |  |  |
+| P6-1 | Evaluate server/client rendering boundaries |  | In Progress | 2026-03-21 | Added perf telemetry in RouteChangeTelemetry + instrumentation
+| P6-2 | Add dynamic imports and bundle optimization |  | In Progress | 2026-03-21 | Implemented targeted lazy load in analytics and charts (next step)
+| P6-3 | Add caching strategy for API-heavy routes |  | In Progress | 2026-03-20 | Added force-cache+revalidate to customers API, analytics page already uses cache
+| P6-4 | Run accessibility and regression full pass |  | In Progress | 2026-03-22 | Need to run Lighthouse and nag for a11y checks
+| P6-5 | Establish route-level performance budgets |  | In Progress | 2026-03-22 | Draft budgets around LCP/TTFB/CLS in docs
 
 Exit Criteria:
 - Performance targets met.

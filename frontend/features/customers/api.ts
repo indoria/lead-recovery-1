@@ -26,7 +26,10 @@ export function buildCustomersUrl(filters: CustomerFilters): string {
 export async function getCustomers(filters: CustomerFilters): Promise<Customer[]> {
   try {
     const url = buildCustomersUrl(filters);
-    const response = await apiClient.get<CustomerListResponse>(url);
+    const response = await apiClient.get<CustomerListResponse>(url, {
+      cache: "force-cache",
+      next: { revalidate: 15 },
+    });
 
     // Handle both direct array and wrapped response
     if (Array.isArray(response)) {
