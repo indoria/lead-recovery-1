@@ -22,7 +22,7 @@ function toPayload(event: TelemetryEvent): Required<TelemetryEvent> {
     timestamp: event.timestamp ?? new Date().toISOString(),
     source: event.source ?? "frontend.unknown",
     message: event.message ?? event.type ?? "event",
-  };
+  } as Required<TelemetryEvent>;
 }
 
 function writeConsole(payload: Required<TelemetryEvent>) {
@@ -128,7 +128,8 @@ export function trackWebVitals(): void {
         }
 
         if (entry.entryType === "layout-shift") {
-          void emitPerformanceMetric("CLS", (entry as unknown as LayoutShift).value);
+          const layoutShiftValue = typeof (entry as any).value === "number" ? (entry as any).value : 0;
+          void emitPerformanceMetric("CLS", layoutShiftValue);
         }
 
         if (entry.entryType === "first-input") {
